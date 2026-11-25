@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🍁.Nʌsʜʌ™.🍁 — Home</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'sans-serif'],
+            script: ['Great Vibes', 'cursive'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="antialiased selection:bg-cyan-400/30 selection:text-cyan-200">
+
+  <!-- Shared Navigation -->
+  <header id="shared-navbar"></header>
+
+  <main class="relative z-10">
+    <!-- Hero Section -->
+    <section class="min-h-screen flex flex-col justify-center items-center px-4 sm:px-6 pt-28 pb-16 text-center">
+      <div class="reveal-up mb-6 inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full glass-card border-cyan-400/30 text-xs sm:text-sm text-cyan-200">
+        <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+        <span id="home-annc-text">We now have <strong class="text-white">2,720+ Members</strong> • Boost Goal <strong class="text-cyan-300">15/36</strong>!</span>
+      </div>
+
+      <div class="reveal-up delay-100 max-w-5xl mx-auto">
+        <p class="text-rose-400/90 text-xs sm:text-sm font-semibold tracking-[0.28em] uppercase mb-3">
+          🍁 Official Discord Sanctuary 🍁
+        </p>
+        <h1 class="font-script text-7xl sm:text-8xl md:text-9xl text-white text-nasha-glow leading-none select-none">
+          Nasha<span class="font-display text-2xl sm:text-3xl align-top text-cyan-300 ml-1">™</span>
+        </h1>
+        <h2 class="font-display text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-bio-gradient mt-3 mb-6 leading-tight">
+          Bioluminescent Vibes, Midnight VCs &amp; 2,720+ Members.
+        </h2>
+        <p class="max-w-2xl mx-auto text-slate-300 text-sm sm:text-base md:text-lg leading-relaxed mb-9">
+          Explore <strong class="text-white">🍁.Nʌsʜʌ™.🍁</strong> — featuring custom <code class="text-cyan-300">#HEX</code> &amp; <code class="text-cyan-300">#RICH</code> roles, <code class="text-cyan-300">#GVWY</code> giveaways, active voice lounges, and a dedicated Founder Admin Portal.
+        </p>
+
+        <div class="flex flex-wrap items-center justify-center gap-4">
+          <button onclick="copyInviteLink()" class="beam-border px-7 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 text-slate-950 font-display font-extrabold text-sm sm:text-base shadow-[0_0_35px_rgba(0,229,255,0.45)] transition transform hover:-translate-y-1 flex items-center gap-3 cursor-pointer">
+            <i class="fa-brands fa-discord text-xl"></i>
+            <span>Join 🍁.Nʌsʜʌ™.🍁</span>
+          </button>
+          <a href="admin-panel.html" class="glass-card px-7 py-4 rounded-2xl text-white font-display font-bold text-sm sm:text-base hover:border-cyan-400 transition transform hover:-translate-y-1 flex items-center gap-2.5">
+            <i class="fa-solid fa-crown text-amber-400"></i>
+            <span>Admin &amp; Founder Portal</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Live Counters -->
+      <div class="reveal-up delay-300 w-full max-w-5xl mx-auto mt-14 grid grid-cols-2 lg:grid-cols-4 gap-4 text-left">
+        <div class="glass-card rounded-2xl p-5">
+          <p class="text-xs text-slate-400 mb-1">TOTAL MEMBERS</p>
+          <p id="home-members-count" class="font-display text-3xl font-extrabold text-white">2,720</p>
+        </div>
+        <div class="glass-card rounded-2xl p-5">
+          <p class="text-xs text-slate-400 mb-1">BOOST GOAL</p>
+          <p id="home-boosts-count" class="font-display text-3xl font-extrabold text-cyan-300">15 / 36</p>
+        </div>
+        <div class="glass-card rounded-2xl p-5">
+          <p class="text-xs text-slate-400 mb-1">SERVER TAG</p>
+          <p class="font-display text-2xl font-extrabold text-rose-300">Nsh 🍁</p>
+        </div>
+        <div class="glass-card rounded-2xl p-5">
+          <p class="text-xs text-slate-400 mb-1">DISCOVERABLE</p>
+          <p class="font-display text-2xl font-extrabold text-emerald-400">Active 24/7</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Channel Marquee -->
+    <div class="py-4 border-y border-cyan-500/15 bg-slate-950/60 overflow-hidden">
+      <div class="animate-marquee flex items-center gap-6 text-xs sm:text-sm font-display font-semibold text-slate-300">
+        <span># CLICK</span><span>🍁</span><span># ANNC</span><span>🍁</span><span># MAIL</span><span>🍁</span>
+        <span># LAW</span><span>🍁</span><span># ROLE</span><span>🍁</span><span># HEX</span><span>🍁</span>
+        <span># RICH</span><span>🍁</span><span># TAG</span><span>🍁</span><span># CHAT</span><span>🍁</span>
+        <span># GVWY</span><span>🍁</span><span>🔊 Music vc</span><span>🍁</span>
+        <span># CLICK</span><span>🍁</span><span># ANNC</span><span>🍁</span><span># MAIL</span><span>🍁</span>
+        <span># LAW</span><span>🍁</span><span># ROLE</span><span>🍁</span><span># HEX</span><span>🍁</span>
+        <span># RICH</span><span>🍁</span><span># TAG</span><span>🍁</span><span># CHAT</span><span>🍁</span>
+        <span># GVWY</span><span>🍁</span><span>🔊 Music vc</span><span>🍁</span>
+      </div>
+    </div>
+
+    <!-- Quick Page Navigation Cards -->
+    <section class="py-24 px-4 sm:px-6 max-w-7xl mx-auto">
+      <div class="reveal-up text-center max-w-2xl mx-auto mb-12">
+        <h3 class="font-display text-3xl sm:text-4xl font-extrabold text-white mb-3">
+          Explore <span class="text-bio-gradient">Nasha™ Pages</span>
+        </h3>
+        <p class="text-sm text-slate-400">Jump straight into live giveaways, gallery visuals, synced Discord staff IDs, FAQ/laws, or the Founder Admin Panel.</p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <a href="events-giveaway.html" class="tilt-card glass-card rounded-3xl p-6 block group">
+          <div class="w-12 h-12 rounded-2xl bg-rose-500/15 border border-rose-400/30 flex items-center justify-center text-rose-400 text-xl mb-4">
+            <i class="fa-solid fa-gift"></i>
+          </div>
+          <h4 class="font-display font-bold text-xl text-white group-hover:text-cyan-300 transition">Events &amp; #GVWY</h4>
+          <p class="text-xs text-slate-400 mt-1.5">View active Nitro &amp; OwO giveaways, music sessions, and RSVP to upcoming events.</p>
+        </a>
+
+        <a href="gallery.html" class="tilt-card glass-card rounded-3xl p-6 block group">
+          <div class="w-12 h-12 rounded-2xl bg-cyan-500/15 border border-cyan-400/30 flex items-center justify-center text-cyan-300 text-xl mb-4">
+            <i class="fa-solid fa-images"></i>
+          </div>
+          <h4 class="font-display font-bold text-xl text-white group-hover:text-cyan-300 transition">Server Gallery</h4>
+          <p class="text-xs text-slate-400 mt-1.5">Browse enchanted tree themes, #HEX palettes, and community moments in full screen.</p>
+        </a>
+
+        <a href="staff-info.html" class="tilt-card glass-card rounded-3xl p-6 block group">
+          <div class="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-400/30 flex items-center justify-center text-amber-300 text-xl mb-4">
+            <i class="fa-solid fa-crown"></i>
+          </div>
+          <h4 class="font-display font-bold text-xl text-white group-hover:text-cyan-300 transition">Staff Info &amp; Discord IDs</h4>
+          <p class="text-xs text-slate-400 mt-1.5">Inspect .CHIEF., .DUCHESS., .SOORAN., and .RICHY. ranks with copyable Discord IDs.</p>
+        </a>
+
+        <a href="FAQ-about.html" class="tilt-card glass-card rounded-3xl p-6 block group">
+          <div class="w-12 h-12 rounded-2xl bg-blue-500/15 border border-blue-400/30 flex items-center justify-center text-blue-300 text-xl mb-4">
+            <i class="fa-solid fa-scale-balanced"></i>
+          </div>
+          <h4 class="font-display font-bold text-xl text-white group-hover:text-cyan-300 transition">FAQ &amp; About Us (#LAW)</h4>
+          <p class="text-xs text-slate-400 mt-1.5">Learn about server channels, boost perks, voice creation, and community rules.</p>
+        </a>
+
+        <a href="admin-panel.html" class="tilt-card glass-card rounded-3xl p-6 block group sm:col-span-2">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center text-emerald-300 text-xl mb-4">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <h4 class="font-display font-bold text-xl text-white group-hover:text-cyan-300 transition">Founder Admin Panel &amp; Auth</h4>
+          <p class="text-xs text-slate-400 mt-1.5">Sign in with Google or Email, host giveaways/events, update member &amp; boost stats, and sync staff Discord IDs.</p>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <script src="firebase-config.js"></script>
+  <script src="auth-modal.js"></script>
+  <script src="navbar.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const s = window.NASHA_STORE.server;
+      document.getElementById('home-members-count').textContent = s.members.toLocaleString();
+      document.getElementById('home-boosts-count').textContent = `${s.boosts} / ${s.boostGoal}`;
+      document.getElementById('home-annc-text').innerHTML = s.announcement;
+    });
+  </script>
+</body>
+</html>
