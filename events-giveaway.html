@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🍁.Nʌsʜʌ™.🍁 — Events &amp; #GVWY</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'sans-serif'],
+            script: ['Great Vibes', 'cursive'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="antialiased selection:bg-cyan-400/30 selection:text-cyan-200">
+  <header id="shared-navbar"></header>
+
+  <main class="relative z-10 pt-28 pb-24 px-4 sm:px-6 max-w-7xl mx-auto">
+    <div class="reveal-up flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+      <div>
+        <span class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-rose-500/15 border border-rose-400/30 text-rose-300 text-xs font-bold uppercase tracking-widest mb-3">
+          <i class="fa-solid fa-gift"></i> #GVWY &amp; Server Events
+        </span>
+        <h1 class="font-display text-3xl sm:text-5xl font-extrabold text-white">
+          Giveaways &amp; <span class="text-bio-gradient">Live Events</span>
+        </h1>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <button onclick="filterEventsList('all')" class="ev-filter px-4 py-2 rounded-xl text-xs font-bold bg-cyan-500 text-slate-950 cursor-pointer" data-filter="all">All</button>
+        <button onclick="filterEventsList('giveaway')" class="ev-filter px-4 py-2 rounded-xl text-xs font-semibold glass-card text-slate-300 cursor-pointer" data-filter="giveaway">🎁 Giveaways</button>
+        <button onclick="filterEventsList('voice')" class="ev-filter px-4 py-2 rounded-xl text-xs font-semibold glass-card text-slate-300 cursor-pointer" data-filter="voice">🎵 Music &amp; VC</button>
+        <button onclick="filterEventsList('gaming')" class="ev-filter px-4 py-2 rounded-xl text-xs font-semibold glass-card text-slate-300 cursor-pointer" data-filter="gaming">🎮 Tournaments</button>
+      </div>
+    </div>
+
+    <div id="events-page-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </main>
+
+  <script src="navbar.js"></script>
+  <script>
+    function renderEventsPage(filter = 'all') {
+      const grid = document.getElementById('events-page-grid');
+      const list = filter === 'all' ? window.NASHA_STORE.events : window.NASHA_STORE.events.filter(e => e.category === filter);
+
+      grid.innerHTML = list.map(ev => `
+        <div class="tilt-card glass-card rounded-3xl p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-4">
+              <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-cyan-500/15 text-cyan-300 border border-cyan-400/30">
+                ${ev.category}
+              </span>
+              <span class="text-xs text-emerald-400 font-semibold"><i class="fa-brands fa-discord mr-1"></i>${ev.syncDiscord ? 'Discord Synced' : 'Web Event'}</span>
+            </div>
+            <h2 class="font-display font-bold text-xl text-white mb-2">${ev.title}</h2>
+            <p class="text-xs text-cyan-300 mb-3"><i class="fa-regular fa-clock mr-1.5"></i>${ev.schedule}</p>
+            <div class="px-3.5 py-2.5 rounded-xl bg-white/[0.03] border border-white/5 text-xs text-slate-300 mb-5">
+              Prize: <strong class="text-white">${ev.prize}</strong> • <span class="text-cyan-300">${ev.participants} entries</span>
+            </div>
+          </div>
+          <button onclick="toggleEventRSVP(${ev.id})" class="w-full py-3 rounded-xl font-display font-bold text-xs transition cursor-pointer ${
+            ev.rsvped
+              ? 'bg-emerald-500/20 border border-emerald-400/40 text-emerald-300'
+              : 'bg-cyan-500/15 hover:bg-cyan-500 hover:text-slate-950 border border-cyan-400/30 text-cyan-200'
+          }">
+            ${ev.rsvped ? '✓ Entered / Reminder Set' : 'Enter Giveaway / RSVP'}
+          </button>
+        </div>
+      `).join('');
+
+      attachTiltCards();
+    }
+
+    function toggleEventRSVP(id) {
+      const ev = window.NASHA_STORE.events.find(item => item.id === id);
+      if (!ev) return;
+      ev.rsvped = !ev.rsvped;
+      ev.participants += ev.rsvped ? 1 : -1;
+      renderEventsPage();
+      showToast(ev.rsvped ? `Entered "${ev.title}"!` : `Left "${ev.title}".`);
+    }
+
+    function filterEventsList(cat) {
+      document.querySelectorAll('.ev-filter').forEach(btn => {
+        btn.className = btn.dataset.filter === cat
+          ? 'ev-filter px-4 py-2 rounded-xl text-xs font-bold bg-cyan-500 text-slate-950 cursor-pointer'
+          : 'ev-filter px-4 py-2 rounded-xl text-xs font-semibold glass-card text-slate-300 cursor-pointer';
+      });
+      renderEventsPage(cat);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => renderEventsPage());
+  </script>
+</body>
+</html>
