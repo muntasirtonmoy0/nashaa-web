@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Founder Panel (.CHIEF. & .DUCHESS.) — 🍁.Nʌsʜʌ™.🍁</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <div id="nasha-navbar-root"></div>
+
+  <main class="page-top-spacer">
+    <section class="section-block">
+      <div class="container">
+        <div class="section-header reveal-on-scroll">
+          <span class="section-kicker" style="color:#fbbf24;">👑 FOUNDER EXECUTIVE SUITE (.CHIEF. / .DUCHESS.)</span>
+          <h1 class="section-title">Founder Panel — Server Architecture &amp; Sync</h1>
+          <p style="color:var(--text-muted);">
+            Restricted to Server Founders. Control global #ANNC announcements, live member &amp; boost counters, Discord Bot webhook sync, and verified Staff Snowflake IDs.
+          </p>
+        </div>
+
+        <div id="founderAuthGate"></div>
+
+        <div id="founderWorkspace" style="display:none;">
+          <div class="grid-2">
+            <div class="glass-card" style="border-color:rgba(251,191,36,0.35);">
+              <span class="channel-tag" style="color:#fde68a;border-color:rgba(251,191,36,0.4);">#ANNC • GLOBAL SERVER METRICS</span>
+              <h2 style="margin:0.75rem 0 1rem;">Live Member Count, Boosts &amp; Hero Ticker</h2>
+              <form id="updateStatsForm" style="display:flex;flex-direction:column;gap:0.85rem;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                  <div>
+                    <label class="nasha-label">Total Server Members</label>
+                    <input class="nasha-input" type="number" id="inMembers" value="2720" required />
+                  </div>
+                  <div>
+                    <label class="nasha-label">Server Boosts (of 36)</label>
+                    <input class="nasha-input" type="number" id="inBoosts" value="15" max="36" required />
+                  </div>
+                </div>
+                <div>
+                  <label class="nasha-label">Global Hero #ANNC Broadcast</label>
+                  <input class="nasha-input" id="inAnnc" required />
+                </div>
+                <button type="submit" class="nasha-btn-primary">Update Global Server State</button>
+              </form>
+
+              <hr style="border:none;border-top:1px solid rgba(56,189,248,0.18);margin:1.5rem 0;" />
+
+              <span class="channel-tag">DISCORD BOT &amp; WEBHOOK SYNC</span>
+              <h3 style="margin:0.65rem 0 0.75rem;">Discord Bridge Configuration</h3>
+              <form id="founderSettingsForm" style="display:flex;flex-direction:column;gap:0.85rem;">
+                <div>
+                  <label class="nasha-label">#GVWY / #ANNC Discord Webhook URL</label>
+                  <input class="nasha-input" type="url" id="inWebhook" placeholder="https://discord.com/api/webhooks/..." />
+                </div>
+                <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;cursor:pointer;">
+                  <input type="checkbox" id="inAutoSync" checked />
+                  <span>Auto-sync Firestore events &amp; staff roster with Discord Bot</span>
+                </label>
+                <button type="submit" class="nasha-btn-secondary">Save Discord Sync Settings</button>
+              </form>
+            </div>
+
+            <div class="glass-card" style="border-color:rgba(251,191,36,0.35);">
+              <span class="channel-tag" style="color:#fde68a;border-color:rgba(251,191,36,0.4);">DISCORD SNOWFLAKE ID REGISTRY</span>
+              <h2 style="margin:0.75rem 0 1rem;">Appoint Staff &amp; Sync Discord IDs</h2>
+              <form id="addStaffForm" style="display:flex;flex-direction:column;gap:0.8rem;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                  <div>
+                    <label class="nasha-label">Staff Display Name</label>
+                    <input class="nasha-input" id="stName" placeholder="e.g. TONMOY" required />
+                  </div>
+                  <div>
+                    <label class="nasha-label">Hierarchy Role</label>
+                    <select class="nasha-select" id="stRank">
+                      <option value=".CHIEF.">.CHIEF. (Founder)</option>
+                      <option value=".DUCHESS.">.DUCHESS. (Co-Founder)</option>
+                      <option value=".SOORAN.">.SOORAN. (Admin)</option>
+                      <option value=".RICHY.">.RICHY. (Admin)</option>
+                    </select>
+                  </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                  <div>
+                    <label class="nasha-label">Discord User ID (17–20 digits)</label>
+                    <input class="nasha-input" id="stDiscordId" placeholder="1089451239847125012" pattern="\d{17,20}" required />
+                  </div>
+                  <div>
+                    <label class="nasha-label">Discord Handle</label>
+                    <input class="nasha-input" id="stHandle" placeholder="@pika_chu0_0" required />
+                  </div>
+                </div>
+                <div>
+                  <label class="nasha-label">Staff Bio &amp; Responsibilities</label>
+                  <input class="nasha-input" id="stBio" placeholder="Server Architect, Bot Dev, or Community Lead" required />
+                </div>
+                <button type="submit" class="nasha-btn-primary">Sync Staff Member to Roster</button>
+              </form>
+
+              <div style="margin-top:1.5rem;">
+                <h3 style="margin:0 0 0.75rem;">Synced Discord Staff Roster</h3>
+                <div id="founderStaffList" style="display:flex;flex-direction:column;gap:0.65rem;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="nasha-footer">
+    <div class="container">🍁.Nʌsʜʌ™.🍁 Founder Executive Suite</div>
+  </footer>
+
+  <script src="firebase-config.js"></script>
+  <script src="auth-modal.js"></script>
+  <script src="navbar.js"></script>
+  <script>
+    function syncFounderAccess() {
+      const allowed = window.NashaAuth.renderAuthGate(
+        "founderAuthGate",
+        "founder",
+        "Founder (.CHIEF. / .DUCHESS.) Clearance Required",
+        "Sign in via your Profile with a Founder account to unlock executive server controls."
+      );
+      document.getElementById("founderWorkspace").style.display = allowed ? "block" : "none";
+      if (allowed) loadFounderData();
+    }
+
+    async function loadFounderData() {
+      const stats = await window.NashaDB.getStats();
+      document.getElementById("inMembers").value = stats.members;
+      document.getElementById("inBoosts").value = stats.boosts;
+      document.getElementById("inAnnc").value = stats.announcement || "";
+
+      const settings = await window.NashaDB.getSettings();
+      document.getElementById("inWebhook").value = settings.discordWebhookUrl || "";
+      document.getElementById("inAutoSync").checked = Boolean(settings.autoSyncBot);
+
+      const staff = await window.NashaDB.getStaff();
+      document.getElementById("founderStaffList").innerHTML = staff.map(st => `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;padding:0.7rem;border:1px solid rgba(251,191,36,0.22);border-radius:10px;background:rgba(3,7,18,0.55);">
+          <div>
+            <strong>${st.name}</strong> <span class="channel-tag">${st.roleRank}</span>
+            <div style="font-size:0.8rem;color:#7dd3fc;">ID: ${st.discordId} • ${st.handle}</div>
+          </div>
+          <button type="button" class="nasha-btn-ghost-sm" onclick="removeStaff('${st.id}')">Revoke</button>
+        </div>
+      `).join("");
+    }
+
+    async function removeStaff(id) {
+      await window.NashaDB.deleteStaffMember(id);
+      loadFounderData();
+    }
+
+    document.getElementById("updateStatsForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await window.NashaDB.updateStats({
+        members: Number(document.getElementById("inMembers").value),
+        boosts: Number(document.getElementById("inBoosts").value),
+        announcement: document.getElementById("inAnnc").value.trim()
+      });
+      loadFounderData();
+    });
+
+    document.getElementById("founderSettingsForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await window.NashaDB.updateSettings({
+        discordWebhookUrl: document.getElementById("inWebhook").value.trim(),
+        autoSyncBot: document.getElementById("inAutoSync").checked
+      });
+      alert("Discord Bridge & Webhook settings saved!");
+    });
+
+    document.getElementById("addStaffForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await window.NashaDB.saveStaffMember({
+        name: document.getElementById("stName").value.trim(),
+        roleRank: document.getElementById("stRank").value,
+        discordId: document.getElementById("stDiscordId").value.trim(),
+        handle: document.getElementById("stHandle").value.trim(),
+        bio: document.getElementById("stBio").value.trim()
+      });
+      e.target.reset();
+      loadFounderData();
+    });
+
+    document.addEventListener("DOMContentLoaded", syncFounderAccess);
+    window.addEventListener("nasha:auth-changed", syncFounderAccess);
+  </script>
+</body>
+</html>

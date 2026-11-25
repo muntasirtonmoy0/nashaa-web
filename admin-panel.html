@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel (#GVWY & Events) — 🍁.Nʌsʜʌ™.🍁</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <div id="nasha-navbar-root"></div>
+
+  <main class="page-top-spacer">
+    <section class="section-block">
+      <div class="container">
+        <div class="section-header reveal-on-scroll">
+          <span class="section-kicker">🛡️ ADMIN &amp; STAFF OPERATIONS (.SOORAN. / .RICHY.)</span>
+          <h1 class="section-title">Admin Panel — Giveaways &amp; Events</h1>
+          <p style="color:var(--text-muted);">
+            Host #GVWY Nitro drops, schedule voice events, and moderate active RSVPs. For core server metrics, staff Discord IDs, and webhook keys, open the <a href="founder-panel.html" style="color:#38bdf8;">Founder Panel</a>.
+          </p>
+        </div>
+
+        <div id="adminAuthGate"></div>
+
+        <div id="adminWorkspace" style="display:none;">
+          <div class="grid-2">
+            <div class="glass-card">
+              <span class="channel-tag">#GVWY • #EVENT PUBLISHER</span>
+              <h2 style="margin:0.75rem 0 1rem;">Host New Giveaway or Event</h2>
+              <form id="createEventForm" style="display:flex;flex-direction:column;gap:0.85rem;">
+                <div>
+                  <label class="nasha-label">Category</label>
+                  <select class="nasha-select" id="evType">
+                    <option value="giveaway">Giveaway (#GVWY)</option>
+                    <option value="event">Voice / Community Event (#EVENT)</option>
+                    <option value="tournament">Gaming / Chess Tournament</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="nasha-label">Discord Channel Tag</label>
+                  <input class="nasha-input" id="evChannel" value="#GVWY" required />
+                </div>
+                <div>
+                  <label class="nasha-label">Event / Giveaway Title</label>
+                  <input class="nasha-input" id="evTitle" placeholder="e.g. 3x Discord Nitro Drop" required />
+                </div>
+                <div>
+                  <label class="nasha-label">Prize / Reward</label>
+                  <input class="nasha-input" id="evPrize" placeholder="e.g. Nitro Boost + .RICH Role" required />
+                </div>
+                <div>
+                  <label class="nasha-label">End Date &amp; Time</label>
+                  <input class="nasha-input" type="datetime-local" id="evEndsAt" required />
+                </div>
+                <div>
+                  <label class="nasha-label">Description &amp; Entry Rules</label>
+                  <textarea class="nasha-textarea" id="evDesc" rows="3" placeholder="React in #GVWY and stay active in #CHAT..." required></textarea>
+                </div>
+                <button type="submit" class="nasha-btn-primary">Publish to Events &amp; Giveaway Page</button>
+              </form>
+            </div>
+
+            <div class="glass-card">
+              <span class="channel-tag">LIVE MODERATION QUEUE</span>
+              <h2 style="margin:0.75rem 0 1rem;">Active Giveaways &amp; Events</h2>
+              <div id="adminEventsList" style="display:flex;flex-direction:column;gap:0.8rem;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="nasha-footer">
+    <div class="container">🍁.Nʌsʜʌ™.🍁 Admin Operations Console</div>
+  </footer>
+
+  <script src="firebase-config.js"></script>
+  <script src="auth-modal.js"></script>
+  <script src="navbar.js"></script>
+  <script>
+    function syncAdminAccess() {
+      const allowed = window.NashaAuth.renderAuthGate(
+        "adminAuthGate",
+        "admin",
+        "Admin Panel Access",
+        "Sign in via your Profile with an Admin (.SOORAN./.RICHY.) or Founder (.CHIEF.) account."
+      );
+      document.getElementById("adminWorkspace").style.display = allowed ? "block" : "none";
+      if (allowed) loadAdminEvents();
+    }
+
+    async function loadAdminEvents() {
+      const events = await window.NashaDB.getEvents();
+      const list = document.getElementById("adminEventsList");
+      if (!events.length) {
+        list.innerHTML = `<p style="color:var(--text-muted);">No active events or giveaways.</p>`;
+        return;
+      }
+      list.innerHTML = events.map(ev => `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;padding:0.8rem;border:1px solid rgba(56,189,248,0.2);border-radius:12px;background:rgba(3,7,18,0.55);">
+          <div>
+            <strong>${ev.title}</strong> <span class="channel-tag">${ev.channel}</span>
+            <div style="font-size:0.82rem;color:#7dd3fc;margin-top:0.2rem;">Prize: ${ev.prize}</div>
+            <div style="font-size:0.78rem;color:var(--text-muted);">${ev.rsvps || 0} RSVPs • Ends ${new Date(ev.endsAt).toLocaleString()}</div>
+          </div>
+          <button type="button" class="nasha-btn-ghost-sm" onclick="removeEvent('${ev.id}')">End / Delete</button>
+        </div>
+      `).join("");
+    }
+
+    async function removeEvent(id) {
+      await window.NashaDB.deleteEvent(id);
+      loadAdminEvents();
+    }
+
+    document.getElementById("createEventForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await window.NashaDB.addEvent({
+        type: document.getElementById("evType").value,
+        channel: document.getElementById("evChannel").value.trim(),
+        title: document.getElementById("evTitle").value.trim(),
+        prize: document.getElementById("evPrize").value.trim(),
+        endsAt: document.getElementById("evEndsAt").value,
+        description: document.getElementById("evDesc").value.trim()
+      });
+      e.target.reset();
+      document.getElementById("evChannel").value = "#GVWY";
+      loadAdminEvents();
+    });
+
+    document.addEventListener("DOMContentLoaded", syncAdminAccess);
+    window.addEventListener("nasha:auth-changed", syncAdminAccess);
+    window.addEventListener("nasha:data-updated", () => {
+      if (window.NashaAuth.hasAccess("admin")) loadAdminEvents();
+    });
+  </script>
+</body>
+</html>
