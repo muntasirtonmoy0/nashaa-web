@@ -1,12 +1,24 @@
 /**
- * 🍁.Nʌsʜʌ™.🍁 — Individual User Auth & Per-User Profile Controller
- * Uses Firebase Compat Auth initialized from firebase-config.js (nashaa-717c9).
+ * 🍁.Nʌsʜʌ™.🍁 — Individual User Auth & Live Role Enforcement
+ * Always computes role from window.NASHA_CONFIG.founderEmails / adminEmails on every read.
  */
 
 window.NashaAuth = (function () {
   const SESSION_KEY = "nasha_active_session_v5";
   const PROFILES_KEY = "nasha_profiles_by_uid_v5";
   let currentUser = null;
+
+  function computeRoleFromConfig(email) {
+    const clean = String(email || "").trim().toLowerCase();
+    if (!clean) return "member";
+    const cfg = window.NASHA_CONFIG || {};
+    const founders = (cfg.founderEmails || []).map((e) => String(e).trim().toLowerCase());
+    const admins = (cfg.adminEmails || []).map((e) => String(e).trim().toLowerCase());
+
+    if (founders.includes(clean)) return "founder";
+    if (admins.includes(clean)) return "admin";
+    return "member";
+  }
 
   function loadProfilesMap() {
     try {
@@ -20,7 +32,7 @@ window.NashaAuth = (function () {
   function saveUserProfileToMap(userObj) {
     if (!userObj || !userObj.uid) return;
     const map = loadProfilesMap();
-    map[userObj.uid] = { ...userObj };
+    map[userObj.uid] = { ...userObj, role: computeRoleFromConfig(userObj.email) };
     localStorage.setItem(PROFILES_KEY, JSON.stringify(map));
   }
 
@@ -30,20 +42,11 @@ window.NashaAuth = (function () {
     return map[uid] || null;
   }
 
-  function resolveRoleFromEmail(email, explicitRole) {
-    if (explicitRole) return explicitRole;
-    const lower = (email || "").toLowerCase().trim();
-    const cfg = window.NASHA_CONFIG || {};
-    if ((cfg.founderEmails || []).map((e) => e.toLowerCase()).includes(lower)) return "founder";
-    if ((cfg.adminEmails || []).map((e) => e.toLowerCase()).includes(lower)) return "admin";
-    return "member";
-  }
-
   function buildIndividualUser({ uid, name, email, photoURL, provider }) {
-    const cleanEmail = (email || "").trim().toLowerCase();
+    const cleanEmail = String(email || "").trim().toLowerCase();
     const stableUid = uid || ("usr_" + btoa(cleanEmail || String(Date.now())).replace(/[^a-zA-Z0-9]/g, "").slice(0, 16));
     const existing = getSavedProfile(stableUid);
-    const computedRole = resolveRoleFromEmail(cleanEmail, existing && existing.role);
+    const enforcedRole = computeRoleFromConfig(cleanEmail);
 
     const merged = {
       uid: stableUid,
@@ -54,7 +57,7 @@ window.NashaAuth = (function () {
       hexColor: (existing && existing.hexColor) || "#38bdf8",
       photoURL: photoURL || (existing && existing.photoURL) || "",
       provider: provider || (existing && existing.provider) || "google",
-      role: computedRole
+      role: enforcedRole
     };
 
     saveUserProfileToMap(merged);
@@ -67,7 +70,16 @@ window.NashaAuth = (function () {
   function loadStoredSession() {
     try {
       const raw = localStorage.getItem(SESSION_KEY);
-      currentUser = raw ? JSON.parse(raw) : null;
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (parsed && parsed.email) {
+        const freshRole = computeRoleFromConfig(parsed.email);
+        if (parsed.role !== freshRole) {
+          parsed.role = freshRole;
+          localStorage.setItem(SESSION_KEY, JSON.stringify(parsed));
+          saveUserProfileToMap(parsed);
+        }
+      }
+      currentUser = parsed;
     } catch (e) {
       currentUser = null;
     }
@@ -75,6 +87,9 @@ window.NashaAuth = (function () {
   }
 
   function setSession(userObj) {
+    if (userObj && userObj.email) {
+      userObj.role = computeRoleFromConfig(userObj.email);
+    }
     currentUser = userObj;
     if (userObj) {
       saveUserProfileToMap(userObj);
@@ -89,6 +104,7 @@ window.NashaAuth = (function () {
     const user = getUser();
     if (!user) return null;
     const updated = { ...user, ...updates };
+    updated.role = computeRoleFromConfig(updated.email);
     setSession(updated);
     if (window.NashaDB && window.NashaDB.saveUserProfile) {
       window.NashaDB.saveUserProfile(updated).catch(() => {});
@@ -96,11 +112,20 @@ window.NashaAuth = (function () {
     return updated;
   }
 
+  function getUser() {
+    const u = loadStoredSession();
+    if (u && u.email) {
+      u.role = computeRoleFromConfig(u.email);
+    }
+    return u;
+  }
+
   function hasAccess(requiredRole) {
     const user = getUser();
     if (!user) return false;
-    if (requiredRole === "founder") return user.role === "founder";
-    if (requiredRole === "admin") return user.role === "founder" || user.role === "admin";
+    const role = computeRoleFromConfig(user.email);
+    if (requiredRole === "founder") return role === "founder";
+    if (requiredRole === "admin") return role === "founder" || role === "admin";
     return true;
   }
 
@@ -197,7 +222,7 @@ window.NashaAuth = (function () {
     wrapper.innerHTML = `
       <div class="nasha-modal-card" role="dialog" aria-modal="true" aria-labelledby="nashaAuthTitle">
         <button type="button" class="nasha-modal-close" id="nashaAuthClose" aria-label="Close modal">&times;</button>
-        <div class="nasha-modal-badge">🍁.Nʌsʜʌ™.🍁 INDIVIDUAL ACCOUNT SIGN-IN</div>
+        <div class="nasha-modal-badge">🍁.Nʌsʜʌ™.🍁 ACCOUNT SIGN-IN</div>
         <h2 id="nashaAuthTitle" class="nasha-modal-title">Sign In to Your Account</h2>
         <p class="nasha-modal-sub" id="nashaAuthSub">
           Each Google or Email account gets its own separate profile, #HEX color, and Discord link.
@@ -277,7 +302,7 @@ window.NashaAuth = (function () {
       showError("");
       const fbAuth = window.NashaDB && window.NashaDB.getAuth();
       if (!fbAuth || typeof firebase === "undefined") {
-        showError("Firebase Auth failed to initialize. Check that Firebase compat SDK scripts are loaded and Google sign-in is enabled in Firebase Console.");
+        showError("Firebase Auth is not loaded on this page.");
         return;
       }
       try {
@@ -286,7 +311,10 @@ window.NashaAuth = (function () {
         const res = await fbAuth.signInWithPopup(provider);
         const u = res.user;
         const cloudProfile = window.NashaDB.fetchUserProfile ? await window.NashaDB.fetchUserProfile(u.uid).catch(() => null) : null;
-        if (cloudProfile) saveUserProfileToMap(cloudProfile);
+        if (cloudProfile) {
+          cloudProfile.role = computeRoleFromConfig(u.email || cloudProfile.email);
+          saveUserProfileToMap(cloudProfile);
+        }
 
         const userObj = buildIndividualUser({
           uid: u.uid,
@@ -320,7 +348,10 @@ window.NashaAuth = (function () {
             cred = await fbAuth.signInWithEmailAndPassword(email, password);
           }
           const cloudProfile = window.NashaDB.fetchUserProfile ? await window.NashaDB.fetchUserProfile(cred.user.uid).catch(() => null) : null;
-          if (cloudProfile) saveUserProfileToMap(cloudProfile);
+          if (cloudProfile) {
+            cloudProfile.role = computeRoleFromConfig(cred.user.email || email);
+            saveUserProfileToMap(cloudProfile);
+          }
 
           const userObj = buildIndividualUser({
             uid: cred.user.uid,
@@ -381,10 +412,6 @@ window.NashaAuth = (function () {
     setSession(null);
   }
 
-  function getUser() {
-    return currentUser || loadStoredSession();
-  }
-
   function renderAuthGate(containerId, requiredRole, title, desc) {
     const el = document.getElementById(containerId);
     if (!el) return false;
@@ -414,7 +441,7 @@ window.NashaAuth = (function () {
           <div class="channel-tag" style="margin-bottom:0.75rem;color:#fda4af;border-color:rgba(244,63,94,0.4);">⛔ INSUFFICIENT CLEARANCE</div>
           <h2 style="margin:0 0 0.6rem;">${requiredRole === "founder" ? "Founder Access Only" : "Admin / Staff Access Only"}</h2>
           <p style="color:var(--text-muted);margin:0 0 1.4rem;">
-            Signed in as <strong>${user.name}</strong> (Role: <code>${user.role.toUpperCase()}</code>). Switch to an authorized account to open this panel.
+            Signed in as <strong>${user.name}</strong> (${user.email} — Role: <code>${user.role.toUpperCase()}</code>). Switch to an authorized account to open this panel.
           </p>
           <button type="button" class="nasha-btn-secondary" onclick="window.NashaAuth.openModal('login')">
             Switch Account
@@ -433,7 +460,10 @@ window.NashaAuth = (function () {
       fbAuth.onAuthStateChanged(async (user) => {
         if (user) {
           const cloudProfile = window.NashaDB.fetchUserProfile ? await window.NashaDB.fetchUserProfile(user.uid).catch(() => null) : null;
-          if (cloudProfile) saveUserProfileToMap(cloudProfile);
+          if (cloudProfile) {
+            cloudProfile.role = computeRoleFromConfig(user.email || cloudProfile.email);
+            saveUserProfileToMap(cloudProfile);
+          }
 
           const userObj = buildIndividualUser({
             uid: user.uid,
