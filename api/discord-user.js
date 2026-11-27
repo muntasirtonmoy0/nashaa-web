@@ -1,4 +1,4 @@
-// api/discord-user.js — Vercel Serverless Function (queries Discord REST API directly without inviting any bot)
+// api/discord-user.js — Vercel Serverless Function (fetches live Discord PFP, Avatar Decoration & Username without any bot in the server)
 export default async function handler(req, res) {
   const { id } = req.query;
   if (!id || !/^\d{17,20}$/.test(String(id))) {
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
       if (r.ok) user = await r.json();
     }
 
-    // Fallback to public lookup API if DISCORD_LOOKUP_TOKEN is not set in Vercel yet
+    // Fallback public lookup if DISCORD_LOOKUP_TOKEN is not set in Vercel Environment Variables
     if (!user) {
       const fallback = await fetch(`https://japi.rest/discord/v1/user/${id}`);
       if (fallback.ok) {
