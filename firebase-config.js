@@ -186,13 +186,14 @@ window.NashaDB = (function () {
       const effectiveRank = normalizeRank((assigned && assigned.role) || p.role);
       if (!STAFF_RANKS.includes(effectiveRank)) return;
 
+      const hasDiscordId = p.discordId && /^\d{17,20}$/.test(String(p.discordId));
       const isOnlineInWidget = widgetOnline.some(
         (wm) =>
-          (p.discordId && String(wm.id) === String(p.discordId)) ||
+          (hasDiscordId && String(wm.id) === String(p.discordId)) ||
           (p.discordHandle && String(wm.username || "").toLowerCase() === String(p.discordHandle).replace(/^@/, "").toLowerCase())
       );
 
-      const mapKey = (p.discordId && /^\d{17,20}$/.test(String(p.discordId))) ? String(p.discordId) : (p.uid || cleanEmail);
+      const mapKey = hasDiscordId ? String(p.discordId) : (p.uid || cleanEmail);
       byKey.set(mapKey, {
         id: p.uid || cleanEmail,
         uid: p.uid || "",
@@ -201,7 +202,7 @@ window.NashaDB = (function () {
         rank: effectiveRank,
         discordId: p.discordId || "Not Linked",
         discordHandle: p.discordHandle || "",
-        avatarUrl: p.avatarUrl || p.photoURL || "",
+        avatarUrl: p.avatarUrl || (hasDiscordId ? "" : (p.photoURL || "")),
         decorationUrl: p.decorationUrl || "",
         hexColor: p.hexColor || "#38bdf8",
         onlineInDiscord: isOnlineInWidget,
@@ -211,14 +212,17 @@ window.NashaDB = (function () {
       });
     });
 
-    // 2. Merge pre-registered / manual staff entries (including Claim Key entries)
+    // 2. Merge pre-registered / manual staff entries (including Claim Key & live Discord PFP/Deco entries)
     manualStaff.forEach((st) => {
       const rank = normalizeRank(st.rank || st.roleRank || st.role);
-      const mapKey = (st.discordId && /^\d{17,20}$/.test(String(st.discordId)))
-        ? String(st.discordId)
-        : (st.uid || st.email || st.id);
+      const hasDiscordId = st.discordId && /^\d{17,20}$/.test(String(st.discordId));
+      const mapKey = hasDiscordId ? String(st.discordId) : (st.uid || st.email || st.id);
       const existing = byKey.get(mapKey);
-      const isOnlineInWidget = widgetOnline.some((wm) => st.discordId && String(wm.id) === String(st.discordId));
+      const isOnlineInWidget = widgetOnline.some((wm) => hasDiscordId && String(wm.id) === String(st.discordId));
+
+      const resolvedAvatar = st.avatarUrl || (existing && existing.avatarUrl) || (hasDiscordId ? "" : ((existing && existing.photoURL) || ""));
+      const resolvedDeco = st.decorationUrl || (existing && existing.decorationUrl) || "";
+      const resolvedName = st.name || (existing && existing.name) || "Staff";
 
       byKey.set(mapKey, {
         ...(existing || {}),
@@ -226,12 +230,12 @@ window.NashaDB = (function () {
         id: st.id || mapKey,
         uid: st.uid || (existing && existing.uid) || "",
         email: st.claimedByEmail || st.email || (existing && existing.email) || "",
-        name: st.name || (existing && existing.name) || "Staff",
+        name: resolvedName,
         rank,
         discordId: st.discordId || (existing && existing.discordId) || "Not Linked",
         discordHandle: st.discordHandle || (existing && existing.discordHandle) || "",
-        avatarUrl: st.avatarUrl || (existing && existing.avatarUrl) || "",
-        decorationUrl: st.decorationUrl || (existing && existing.decorationUrl) || "",
+        avatarUrl: resolvedAvatar,
+        decorationUrl: resolvedDeco,
         onlineInDiscord: isOnlineInWidget || Boolean(existing && existing.onlineInDiscord),
         role: st.bio || st.role || `${rank.charAt(0).toUpperCase() + rank.slice(1)}`,
         badgeColor: getBadgeColor(rank)
@@ -445,12 +449,20 @@ window.NashaDB = (function () {
     if (!userObj || !userObj.uid) return;
     const list = await getAllUserProfiles();
     const idx = list.findIndex((u) => u.uid === userObj.uid);
-    if (idx >= 0) list[idx] = { ...list[idx], ...userObj };
-    else list.push(userObj);
+    const existing = idx >= 0 ? list[idx] : {};
+    const merged = {
+      ...existing,
+      ...userObj,
+      name: (existing && existing.name) || userObj.name,
+      avatarUrl: (existing && existing.avatarUrl) || userObj.avatarUrl || "",
+      decorationUrl: (existing && existing.decorationUrl) || userObj.decorationUrl || ""
+    };
+    if (idx >= 0) list[idx] = merged;
+    else list.push(merged);
     writeLocal(STORAGE_KEYS.USER_PROFILES, list);
 
     if (firestoreInstance && firebaseAuthInstance && firebaseAuthInstance.currentUser) {
-      await firestoreInstance.collection("user_profiles").doc(userObj.uid).set(userObj, { merge: true }).catch(() => {});
+      await firestoreInstance.collection("user_profiles").doc(userObj.uid).set(merged, { merge: true }).catch(() => {});
     }
   }
 
@@ -587,7 +599,6 @@ window.NashaDB = (function () {
   };
 })();
 
-// Live Discord PFP, Avatar Decoration, Display Name & Username sync via /api/discord-user
 window.fetchLiveDiscordUser = async function (discordId) {
   if (!discordId || !/^\d{17,20}$/.test(String(discordId))) return null;
   try {
