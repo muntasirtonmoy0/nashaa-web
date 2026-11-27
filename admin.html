@@ -16,16 +16,15 @@
     <section class="section-block">
       <div class="container">
         <div class="section-header reveal-on-scroll">
-          <span class="section-kicker" id="panelKicker">🛡️ ADMIN &amp; STAFF OPERATIONS (.SOORAN. / .RICHY.)</span>
-          <h1 class="section-title" id="panelTitle">Admin Panel — Giveaways &amp; Events</h1>
+          <span class="section-kicker" id="panelKicker">🛡️ ADMIN &amp; STAFF PANEL</span>
+          <h1 class="section-title" id="panelTitle">Admin Panel — Announcements &amp; Events</h1>
           <p style="color:var(--text-muted);" id="panelSubtitle">
-            Host #GVWY Nitro drops, schedule voice events, and moderate active RSVPs.
+            Publish announcements to announcement.html, host giveaways/events, and moderate entries.
           </p>
 
-          <!-- Founder-Only Mode Switcher Button (Hidden for regular Admins & Members) -->
           <div id="ownerModeSwitchWrap" style="display:none;margin-top:1.15rem;">
             <button type="button" id="toggleOwnerPanelBtn" class="nasha-btn-primary" style="background:linear-gradient(135deg,#d97706,#f59e0b);border-color:rgba(253,224,71,0.6);box-shadow:0 0 26px rgba(245,158,11,0.4);">
-              👑 Switch to Founder / Owner Panel
+              👑 Switch to Founder Panel
             </button>
           </div>
         </div>
@@ -33,123 +32,148 @@
         <div id="adminAuthGate"></div>
 
         <div id="adminWorkspace" style="display:none;">
-          <!-- ADMIN VIEW: Giveaways & Events -->
+          <!-- ADMIN PANEL VIEW -->
           <div id="adminModeSection">
             <div class="grid-2">
               <div class="glass-card">
-                <span class="channel-tag">#GVWY • #EVENT PUBLISHER</span>
+                <span class="channel-tag">ANNOUNCEMENT PUBLISHER → announcement.html</span>
+                <h2 style="margin:0.75rem 0 1rem;">Make an Announcement</h2>
+                <form id="createAnnouncementForm" style="display:flex;flex-direction:column;gap:0.85rem;">
+                  <div>
+                    <label class="nasha-label">Tag</label>
+                    <input class="nasha-input" id="anncTag" value="#ANNC" required />
+                  </div>
+                  <div>
+                    <label class="nasha-label">Announcement Title</label>
+                    <input class="nasha-input" id="anncTitle" placeholder="e.g. Server Milestone & New Event" required />
+                  </div>
+                  <div>
+                    <label class="nasha-label">Announcement Message</label>
+                    <textarea class="nasha-textarea" id="anncMessage" rows="3" placeholder="Write the announcement shown on announcement.html..." required></textarea>
+                  </div>
+                  <button type="submit" class="nasha-btn-primary">Publish Announcement</button>
+                </form>
+
+                <div style="margin-top:1.4rem;">
+                  <h3 style="margin:0 0 0.65rem;">Recent Announcements</h3>
+                  <div id="adminAnnouncementsList" style="display:flex;flex-direction:column;gap:0.65rem;"></div>
+                </div>
+              </div>
+
+              <div class="glass-card">
+                <span class="channel-tag">#GVWY &amp; EVENTS PUBLISHER</span>
                 <h2 style="margin:0.75rem 0 1rem;">Host New Giveaway or Event</h2>
                 <form id="createEventForm" style="display:flex;flex-direction:column;gap:0.85rem;">
                   <div>
                     <label class="nasha-label">Category</label>
                     <select class="nasha-select" id="evType">
-                      <option value="giveaway">Giveaway (#GVWY)</option>
-                      <option value="event">Voice / Community Event (#EVENT)</option>
-                      <option value="tournament">Gaming / Chess Tournament</option>
+                      <option value="giveaway">giveaway</option>
+                      <option value="event">event</option>
+                      <option value="tournament">tournament</option>
                     </select>
                   </div>
                   <div>
-                    <label class="nasha-label">Discord Channel Tag</label>
+                    <label class="nasha-label">Channel Tag</label>
                     <input class="nasha-input" id="evChannel" value="#GVWY" required />
                   </div>
                   <div>
-                    <label class="nasha-label">Event / Giveaway Title</label>
-                    <input class="nasha-input" id="evTitle" placeholder="e.g. 3x Discord Nitro Drop" required />
+                    <label class="nasha-label">Title</label>
+                    <input class="nasha-input" id="evTitle" placeholder="e.g. Monthly Nitro Giveaway" required />
                   </div>
                   <div>
                     <label class="nasha-label">Prize / Reward</label>
-                    <input class="nasha-input" id="evPrize" placeholder="e.g. Nitro Boost + .RICH Role" required />
+                    <input class="nasha-input" id="evPrize" placeholder="e.g. Nitro + Custom Perk" required />
                   </div>
                   <div>
                     <label class="nasha-label">End Date &amp; Time</label>
                     <input class="nasha-input" type="datetime-local" id="evEndsAt" required />
                   </div>
                   <div>
-                    <label class="nasha-label">Description &amp; Entry Rules</label>
-                    <textarea class="nasha-textarea" id="evDesc" rows="3" placeholder="React in #GVWY and stay active in #CHAT..." required></textarea>
+                    <label class="nasha-label">Description</label>
+                    <textarea class="nasha-textarea" id="evDesc" rows="2" placeholder="Event details and rules..." required></textarea>
                   </div>
-                  <button type="submit" class="nasha-btn-primary">Publish to Events &amp; Giveaway Page</button>
+                  <button type="submit" class="nasha-btn-primary">Publish Event / Giveaway</button>
                 </form>
-              </div>
 
-              <div class="glass-card">
-                <span class="channel-tag">LIVE MODERATION QUEUE</span>
-                <h2 style="margin:0.75rem 0 1rem;">Active Giveaways &amp; Events</h2>
-                <div id="adminEventsList" style="display:flex;flex-direction:column;gap:0.8rem;"></div>
+                <div style="margin-top:1.4rem;">
+                  <h3 style="margin:0 0 0.65rem;">Active Events &amp; Giveaways</h3>
+                  <div id="adminEventsList" style="display:flex;flex-direction:column;gap:0.65rem;"></div>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- FOUNDER / OWNER VIEW: Unlocked ONLY when Founder toggles Founder Panel mode -->
+          <!-- FOUNDER PANEL VIEW -->
           <div id="ownerModeSection" style="display:none;">
             <div class="grid-2">
+              <!-- Column 1: Assign Roles by Email + View Permissions -->
               <div class="glass-card" style="border-color:rgba(251,191,36,0.45);">
-                <span class="channel-tag" style="color:#fde68a;border-color:rgba(251,191,36,0.45);">#ANNC • FOUNDER SERVER METRICS</span>
-                <h2 style="margin:0.75rem 0 1rem;">Live Member Count &amp; Hero Ticker</h2>
-                <form id="updateStatsForm" style="display:flex;flex-direction:column;gap:0.85rem;">
+                <span class="channel-tag" style="color:#fde68a;border-color:rgba(251,191,36,0.45);">ROLE &amp; EMAIL ACCESS CONTROL</span>
+                <h2 style="margin:0.75rem 0 1rem;">Assign User Email to Role</h2>
+                <form id="assignRoleForm" style="display:flex;flex-direction:column;gap:0.85rem;">
                   <div>
-                    <label class="nasha-label">Total Server Members</label>
-                    <input class="nasha-input" type="number" id="inMembers" value="2720" required />
+                    <label class="nasha-label">User Email</label>
+                    <input class="nasha-input" type="email" id="roleEmailInput" placeholder="user@gmail.com" required />
                   </div>
                   <div>
-                    <label class="nasha-label">Global Hero #ANNC Broadcast</label>
-                    <input class="nasha-input" id="inAnnc" required />
+                    <label class="nasha-label">Rank</label>
+                    <select class="nasha-select" id="roleSelectInput">
+                      <option value="founder">founder</option>
+                      <option value="owner">owner</option>
+                      <option value="admin">admin</option>
+                      <option value="moderator">moderator</option>
+                      <option value="staff">staff</option>
+                      <option value="member">member</option>
+                    </select>
                   </div>
-                  <button type="submit" class="nasha-btn-primary">Update Global Server State</button>
+                  <button type="submit" class="nasha-btn-primary">Save Role Assignment</button>
                 </form>
 
-                <hr style="border:none;border-top:1px solid rgba(56,189,248,0.18);margin:1.5rem 0;" />
+                <div style="margin-top:1.25rem;padding:0.9rem;border-radius:12px;background:rgba(3,7,18,0.6);border:1px solid rgba(56,189,248,0.2);">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                    <strong style="font-size:0.9rem;">Role Permissions Viewer</strong>
+                    <span class="channel-tag" id="permRoleBadge">FOUNDER</span>
+                  </div>
+                  <ul id="rolePermissionsList" style="margin:0;padding-left:1.15rem;color:var(--text-muted);font-size:0.84rem;"></ul>
+                </div>
 
-                <span class="channel-tag">BOT-FREE DISCORD SYNC</span>
-                <h3 style="margin:0.65rem 0 0.75rem;">Invite &amp; Widget Sync Settings</h3>
-                <form id="founderSettingsForm" style="display:flex;flex-direction:column;gap:0.85rem;">
-                  <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;cursor:pointer;">
-                    <input type="checkbox" id="inAutoSync" checked />
-                    <span>Auto-sync member count via Discord invite &amp; widget</span>
-                  </label>
-                  <button type="submit" class="nasha-btn-secondary">Save Sync Settings</button>
-                </form>
+                <div style="margin-top:1.25rem;">
+                  <h3 style="margin:0 0 0.65rem;">Assigned Email Ranks</h3>
+                  <div id="roleAssignmentsList" style="display:flex;flex-direction:column;gap:0.6rem;"></div>
+                </div>
               </div>
 
-              <div class="glass-card" style="border-color:rgba(251,191,36,0.45);">
-                <span class="channel-tag" style="color:#fde68a;border-color:rgba(251,191,36,0.45);">DISCORD SNOWFLAKE ID REGISTRY</span>
-                <h2 style="margin:0.75rem 0 1rem;">Appoint Staff &amp; Sync Discord IDs</h2>
-                <form id="addStaffForm" style="display:flex;flex-direction:column;gap:0.8rem;">
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
-                    <div>
-                      <label class="nasha-label">Staff Display Name</label>
-                      <input class="nasha-input" id="stName" placeholder="e.g. TONMOY" required />
-                    </div>
-                    <div>
-                      <label class="nasha-label">Hierarchy Role</label>
-                      <select class="nasha-select" id="stRank">
-                        <option value=".CHIEF.">.CHIEF. (Founder)</option>
-                        <option value=".DUCHESS.">.DUCHESS. (Co-Founder)</option>
-                        <option value=".SOORAN.">.SOORAN. (Admin)</option>
-                        <option value=".RICHY.">.RICHY. (Admin)</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
-                    <div>
-                      <label class="nasha-label">Discord User ID (17–20 digits)</label>
-                      <input class="nasha-input" id="stDiscordId" placeholder="1089451239847125012" pattern="\d{17,20}" required />
-                    </div>
-                    <div>
-                      <label class="nasha-label">Discord Handle</label>
-                      <input class="nasha-input" id="stHandle" placeholder="@pika_chu0_0" required />
-                    </div>
-                  </div>
-                  <div>
-                    <label class="nasha-label">Staff Bio &amp; Responsibilities</label>
-                    <input class="nasha-input" id="stBio" placeholder="Server Architect, Bot Dev, or Community Lead" required />
-                  </div>
-                  <button type="submit" class="nasha-btn-primary">Sync Staff Member to Roster</button>
-                </form>
+              <!-- Column 2: Edit Logged-In Staff Display Names & Real-Time Discord IDs + Staff Activity -->
+              <div style="display:flex;flex-direction:column;gap:1.5rem;">
+                <div class="glass-card" style="border-color:rgba(251,191,36,0.45);">
+                  <span class="channel-tag" style="color:#fde68a;border-color:rgba(251,191,36,0.45);">LIVE STAFF DISPLAY NAMES &amp; DISCORD IDs → staff-info.html</span>
+                  <h2 style="margin:0.75rem 0 0.5rem;">Logged-In Staff &amp; Founders</h2>
+                  <p style="color:var(--text-muted);font-size:0.84rem;margin:0 0 1rem;">
+                    Edit any staff member's display name or 18-digit Discord ID—changes appear live on <strong>staff-info.html</strong>.
+                  </p>
+                  <div id="founderStaffProfilesList" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
+                </div>
 
-                <div style="margin-top:1.5rem;">
-                  <h3 style="margin:0 0 0.75rem;">Synced Discord Staff Roster</h3>
-                  <div id="founderStaffList" style="display:flex;flex-direction:column;gap:0.65rem;"></div>
+                <div class="glass-card" style="border-color:rgba(251,191,36,0.45);">
+                  <span class="channel-tag" style="color:#fde68a;border-color:rgba(251,191,36,0.45);">STAFF ACTIVITY MONITOR</span>
+                  <h2 style="margin:0.75rem 0 1rem;">All Staff Activity</h2>
+                  <div id="founderActivityList" style="display:flex;flex-direction:column;gap:0.65rem;max-height:320px;overflow-y:auto;"></div>
+                </div>
+
+                <div class="glass-card" style="border-color:rgba(251,191,36,0.45);">
+                  <span class="channel-tag">SERVER STATS</span>
+                  <h3 style="margin:0.65rem 0 0.85rem;">Update Member Count &amp; Hero Ticker</h3>
+                  <form id="updateStatsForm" style="display:flex;flex-direction:column;gap:0.8rem;">
+                    <div>
+                      <label class="nasha-label">Total Members</label>
+                      <input class="nasha-input" type="number" id="inMembers" value="2720" required />
+                    </div>
+                    <div>
+                      <label class="nasha-label">Hero Announcement HTML</label>
+                      <input class="nasha-input" id="inAnnc" required />
+                    </div>
+                    <button type="submit" class="nasha-btn-secondary">Update Server Stats</button>
+                  </form>
                 </div>
               </div>
             </div>
@@ -160,7 +184,7 @@
   </main>
 
   <footer class="nasha-footer">
-    <div class="container">🍁.Nʌsʜʌ™.🍁 Admin &amp; Founder Operations Console</div>
+    <div class="container">🍁.Nʌsʜʌ™.🍁 Admin &amp; Founder Panel</div>
   </footer>
 
   <script src="firebase-config.js"></script>
@@ -168,6 +192,14 @@
   <script src="navbar.js"></script>
   <script>
     let isOwnerMode = false;
+
+    function renderRolePermissions(roleKey) {
+      const info = (window.ROLE_PERMISSIONS && window.ROLE_PERMISSIONS[roleKey]) || window.ROLE_PERMISSIONS.member;
+      document.getElementById("permRoleBadge").textContent = (info.label || roleKey).toUpperCase();
+      document.getElementById("rolePermissionsList").innerHTML = (info.perms || [])
+        .map(p => `<li style="margin-bottom:0.3rem;">${p}</li>`)
+        .join("");
+    }
 
     function updatePanelModeUI() {
       const canFounder = window.NashaAuth.hasAccess("founder");
@@ -180,23 +212,24 @@
       if (!canFounder) isOwnerMode = false;
 
       if (isOwnerMode && canFounder) {
-        document.getElementById("panelKicker").textContent = "👑 FOUNDER / OWNER EXECUTIVE SUITE (.CHIEF. / .DUCHESS.)";
+        document.getElementById("panelKicker").textContent = "👑 FOUNDER PANEL";
         document.getElementById("panelKicker").style.color = "#fbbf24";
-        document.getElementById("panelTitle").textContent = "Founder Panel — Server Architecture & Sync";
-        document.getElementById("panelSubtitle").textContent = "Control global #ANNC broadcasts, live member counts, and verified Staff Snowflake IDs.";
+        document.getElementById("panelTitle").textContent = "Founder Panel — Roles, Staff Names & Activity";
+        document.getElementById("panelSubtitle").textContent = "Assign ranks, edit staff display names & Discord IDs, and view all staff activity.";
         toggleBtn.textContent = "🛡️ Switch Back to Admin Panel";
         adminSec.style.display = "none";
         ownerSec.style.display = "block";
-        loadOwnerData();
+        renderRolePermissions(document.getElementById("roleSelectInput").value);
+        loadFounderData();
       } else {
-        document.getElementById("panelKicker").textContent = "🛡️ ADMIN & STAFF OPERATIONS (.SOORAN. / .RICHY.)";
+        document.getElementById("panelKicker").textContent = "🛡️ ADMIN PANEL";
         document.getElementById("panelKicker").style.color = "#38bdf8";
-        document.getElementById("panelTitle").textContent = "Admin Panel — Giveaways & Events";
-        document.getElementById("panelSubtitle").textContent = "Host #GVWY Nitro drops, schedule voice events, and moderate active RSVPs.";
-        toggleBtn.textContent = "👑 Switch to Founder / Owner Panel";
+        document.getElementById("panelTitle").textContent = "Admin Panel — Announcements & Events";
+        document.getElementById("panelSubtitle").textContent = "Publish announcements to announcement.html and manage giveaways/events.";
+        toggleBtn.textContent = "👑 Switch to Founder Panel";
         adminSec.style.display = "block";
         ownerSec.style.display = "none";
-        loadAdminEvents();
+        loadAdminData();
       }
     }
 
@@ -205,7 +238,7 @@
         "adminAuthGate",
         "admin",
         "Admin Panel Access",
-        "Sign in via your Profile with an authorized Admin or Founder email."
+        "Sign in via your Profile with an authorized account to access this panel."
       );
       document.getElementById("adminWorkspace").style.display = allowed ? "block" : "none";
       if (allowed) updatePanelModeUI();
@@ -217,54 +250,143 @@
       updatePanelModeUI();
     });
 
-    async function loadAdminEvents() {
-      const events = await window.NashaDB.getEvents();
-      const list = document.getElementById("adminEventsList");
-      if (!events.length) {
-        list.innerHTML = `<p style="color:var(--text-muted);">No active events or giveaways.</p>`;
-        return;
-      }
-      list.innerHTML = events.map(ev => `
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;padding:0.8rem;border:1px solid rgba(56,189,248,0.2);border-radius:12px;background:rgba(3,7,18,0.55);">
-          <div>
-            <strong>${ev.title}</strong> <span class="channel-tag">${ev.channel}</span>
-            <div style="font-size:0.82rem;color:#7dd3fc;margin-top:0.2rem;">Prize: ${ev.prize}</div>
-            <div style="font-size:0.78rem;color:var(--text-muted);">${ev.rsvps || 0} RSVPs • Ends ${new Date(ev.endsAt).toLocaleString()}</div>
+    document.getElementById("roleSelectInput").addEventListener("change", (e) => {
+      renderRolePermissions(e.target.value);
+    });
+
+    async function loadAdminData() {
+      const anncs = await window.NashaDB.getAnnouncements();
+      document.getElementById("adminAnnouncementsList").innerHTML = anncs.length
+        ? anncs.map(a => `
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;padding:0.75rem;border:1px solid rgba(56,189,248,0.2);border-radius:12px;background:rgba(3,7,18,0.55);">
+            <div>
+              <strong>${a.title}</strong> <span class="channel-tag">${a.tag || "#ANNC"}</span>
+              <div style="font-size:0.82rem;color:var(--text-muted);margin-top:0.2rem;">${a.message}</div>
+            </div>
+            <button type="button" class="nasha-btn-ghost-sm" onclick="removeAnnouncement('${a.id}')">Delete</button>
           </div>
-          <button type="button" class="nasha-btn-ghost-sm" onclick="removeEvent('${ev.id}')">End / Delete</button>
-        </div>
-      `).join("");
+        `).join("")
+        : `<p style="color:var(--text-muted);font-size:0.85rem;">No announcements published yet.</p>`;
+
+      const events = await window.NashaDB.getEvents();
+      document.getElementById("adminEventsList").innerHTML = events.length
+        ? events.map(ev => `
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;padding:0.75rem;border:1px solid rgba(56,189,248,0.2);border-radius:12px;background:rgba(3,7,18,0.55);">
+            <div>
+              <strong>${ev.title}</strong> <span class="channel-tag">${ev.channel}</span>
+              <div style="font-size:0.8rem;color:#7dd3fc;">Prize: ${ev.prize} • ${ev.rsvps || 0} RSVPs</div>
+            </div>
+            <button type="button" class="nasha-btn-ghost-sm" onclick="removeEvent('${ev.id}')">Delete</button>
+          </div>
+        `).join("")
+        : `<p style="color:var(--text-muted);font-size:0.85rem;">No active events or giveaways.</p>`;
     }
 
-    async function loadOwnerData() {
+    async function loadFounderData() {
       const stats = await window.NashaDB.getStats();
       document.getElementById("inMembers").value = stats.members;
       document.getElementById("inAnnc").value = stats.announcement || "";
 
-      const settings = await window.NashaDB.getSettings();
-      document.getElementById("inAutoSync").checked = Boolean(settings.autoSyncInvite);
-
-      const staff = await window.NashaDB.getStaff();
-      document.getElementById("founderStaffList").innerHTML = staff.map(st => `
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;padding:0.7rem;border:1px solid rgba(251,191,36,0.22);border-radius:10px;background:rgba(3,7,18,0.55);">
-          <div>
-            <strong>${st.name}</strong> <span class="channel-tag">${st.roleRank}</span>
-            <div style="font-size:0.8rem;color:#7dd3fc;">ID: ${st.discordId} • ${st.handle}</div>
+      const assignments = await window.NashaDB.getRoleAssignments();
+      document.getElementById("roleAssignmentsList").innerHTML = assignments.length
+        ? assignments.map(r => `
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;padding:0.65rem 0.75rem;border:1px solid rgba(251,191,36,0.22);border-radius:10px;background:rgba(3,7,18,0.55);">
+            <div>
+              <strong style="font-size:0.88rem;">${r.email}</strong>
+              <span class="channel-tag" style="margin-left:0.4rem;">${r.role}</span>
+            </div>
+            <button type="button" class="nasha-btn-ghost-sm" onclick="removeRole('${r.email}')">Remove</button>
           </div>
-          <button type="button" class="nasha-btn-ghost-sm" onclick="removeStaff('${st.id}')">Revoke</button>
-        </div>
-      `).join("");
+        `).join("")
+        : `<p style="color:var(--text-muted);font-size:0.84rem;">No custom email role assignments yet.</p>`;
+
+      // Logged-in staff & founders directory with inline display-name & Discord ID editor
+      const staffDirectory = await window.NashaDB.getStaff();
+      document.getElementById("founderStaffProfilesList").innerHTML = staffDirectory.length
+        ? staffDirectory.map(st => `
+          <div style="padding:0.8rem;border:1px solid rgba(251,191,36,0.25);border-radius:12px;background:rgba(3,7,18,0.58);">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+              <div>
+                <span class="channel-tag">${st.rank}</span>
+                <span style="font-size:0.78rem;color:var(--text-muted);margin-left:0.35rem;">${st.email || ""}</span>
+              </div>
+              <span style="font-size:0.75rem;color:${st.onlineInDiscord ? "#4ade80" : "#94a3b8"};">
+                ${st.onlineInDiscord ? "● Online in Discord" : "○ Synced"}
+              </span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:0.5rem;align-items:center;">
+              <input class="nasha-input" id="edit-staff-name-${st.id}" value="${(st.name || "").replace(/"/g, "&quot;")}" placeholder="Display Name" style="padding:0.45rem 0.65rem;font-size:0.85rem;" />
+              <input class="nasha-input" id="edit-staff-did-${st.id}" value="${st.discordId === "Not Linked" ? "" : (st.discordId || "")}" placeholder="Discord User ID" style="padding:0.45rem 0.65rem;font-size:0.85rem;" />
+              <button type="button" class="nasha-btn-ghost-sm" onclick="saveEditedStaff('${st.id}', '${st.uid || ""}')">Save</button>
+            </div>
+          </div>
+        `).join("")
+        : `<p style="color:var(--text-muted);font-size:0.84rem;">No logged-in staff or founders found yet.</p>`;
+
+      const activity = await window.NashaDB.getActivity();
+      document.getElementById("founderActivityList").innerHTML = activity.length
+        ? activity.map(act => `
+          <div style="padding:0.7rem 0.8rem;border:1px solid rgba(56,189,248,0.18);border-radius:10px;background:rgba(3,7,18,0.55);">
+            <div style="display:flex;justify-content:space-between;gap:0.5rem;font-size:0.82rem;">
+              <span><strong>${act.actorName}</strong> <span class="channel-tag">${act.actorRole}</span></span>
+              <span style="color:var(--text-muted);font-size:0.75rem;">${new Date(act.timestamp).toLocaleString()}</span>
+            </div>
+            <div style="color:#e2e8f0;font-size:0.86rem;margin-top:0.25rem;">${act.action}</div>
+          </div>
+        `).join("")
+        : `<p style="color:var(--text-muted);font-size:0.84rem;">No staff activity recorded yet.</p>`;
+    }
+
+    async function saveEditedStaff(id, uid) {
+      const nameInput = document.getElementById(`edit-staff-name-${id}`);
+      const didInput = document.getElementById(`edit-staff-did-${id}`);
+      const newName = nameInput ? nameInput.value.trim() : "";
+      const newDiscordId = didInput ? didInput.value.trim() : "";
+      if (!newName) return;
+
+      if (uid) {
+        await window.NashaDB.updateUserProfileByFounder(uid, {
+          name: newName,
+          discordId: newDiscordId
+        });
+        const current = window.NashaAuth.getUser();
+        if (current && current.uid === uid) {
+          window.NashaAuth.updateProfile({ name: newName, discordId: newDiscordId });
+        }
+      } else {
+        await window.NashaDB.saveStaffMember({ id, name: newName, discordId: newDiscordId });
+      }
+      loadFounderData();
+      if (window.showToast) window.showToast(`Updated staff display name to "${newName}"`);
+    }
+
+    async function removeAnnouncement(id) {
+      await window.NashaDB.deleteAnnouncement(id);
+      loadAdminData();
     }
 
     async function removeEvent(id) {
       await window.NashaDB.deleteEvent(id);
-      loadAdminEvents();
+      loadAdminData();
     }
 
-    async function removeStaff(id) {
-      await window.NashaDB.deleteStaffMember(id);
-      loadOwnerData();
+    async function removeRole(email) {
+      await window.NashaDB.removeRoleAssignment(email);
+      loadFounderData();
     }
+
+    document.getElementById("createAnnouncementForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await window.NashaDB.addAnnouncement({
+        tag: document.getElementById("anncTag").value.trim(),
+        title: document.getElementById("anncTitle").value.trim(),
+        message: document.getElementById("anncMessage").value.trim()
+      });
+      e.target.reset();
+      document.getElementById("anncTag").value = "#ANNC";
+      loadAdminData();
+      if (window.showToast) window.showToast("Announcement published to announcement.html!");
+    });
 
     document.getElementById("createEventForm").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -278,47 +400,36 @@
       });
       e.target.reset();
       document.getElementById("evChannel").value = "#GVWY";
-      loadAdminEvents();
-      if (window.showToast) window.showToast("Published to Events & #GVWY!");
+      loadAdminData();
+      if (window.showToast) window.showToast("Published event / giveaway!");
+    });
+
+    document.getElementById("assignRoleForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("roleEmailInput").value.trim().toLowerCase();
+      const role = document.getElementById("roleSelectInput").value;
+      await window.NashaDB.assignRoleToEmail(email, role);
+      e.target.reset();
+      renderRolePermissions(role);
+      loadFounderData();
+      if (window.showToast) window.showToast(`Assigned ${role} to ${email}`);
     });
 
     document.getElementById("updateStatsForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      await window.NashaDB.updateStats({
-        members: Number(document.getElementById("inMembers").value),
-        announcement: document.getElementById("inAnnc").value.trim()
-      });
-      loadOwnerData();
-      if (window.showToast) window.showToast("Global server stats updated!");
-    });
-
-    document.getElementById("founderSettingsForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      await window.NashaDB.updateSettings({
-        autoSyncInvite: document.getElementById("inAutoSync").checked
-      });
-      if (window.showToast) window.showToast("Discord sync settings saved!");
-    });
-
-    document.getElementById("addStaffForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      await window.NashaDB.saveStaffMember({
-        name: document.getElementById("stName").value.trim(),
-        roleRank: document.getElementById("stRank").value,
-        discordId: document.getElementById("stDiscordId").value.trim(),
-        handle: document.getElementById("stHandle").value.trim(),
-        bio: document.getElementById("stBio").value.trim()
-      });
-      e.target.reset();
-      loadOwnerData();
-      if (window.showToast) window.showToast("Staff Discord ID synced!");
+      const membersVal = Number(document.getElementById("inMembers").value);
+      const anncVal = document.getElementById("inAnnc").value.trim();
+      await window.NashaDB.updateStats({ members: membersVal, announcement: anncVal });
+      await window.NashaDB.logActivity(`Updated server stats (members: ${membersVal})`, "stats");
+      loadFounderData();
+      if (window.showToast) window.showToast("Server stats updated!");
     });
 
     document.addEventListener("DOMContentLoaded", syncAdminAccess);
     window.addEventListener("nasha:auth-changed", syncAdminAccess);
     window.addEventListener("nasha:data-updated", () => {
       if (window.NashaAuth.hasAccess("admin")) {
-        isOwnerMode ? loadOwnerData() : loadAdminEvents();
+        isOwnerMode ? loadFounderData() : loadAdminData();
       }
     });
   </script>
