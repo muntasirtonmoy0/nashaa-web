@@ -1,23 +1,78 @@
 /**
- * 🍁.Nʌsʜʌ™.🍁 — Auth Gate, Google/Email Modal & User Profile Updater
- * Works seamlessly with profile.html, admin-panel.html, and founder-panel.html
+ * 🍁.Nʌsʜʌ™.🍁 — Individual User Auth & Per-User Profile Store
+ * Stores each Google/Email user's profile separately by uid/email so users never overwrite one another.
  */
 
 window.NashaAuth = (function () {
-  const SESSION_KEY = "nasha_user_session_v4";
+  const SESSION_KEY = "nasha_active_session_v5";
+  const PROFILES_KEY = "nasha_profiles_by_uid_v5";
   let currentUser = null;
+
+  function loadProfilesMap() {
+    try {
+      const raw = localStorage.getItem(PROFILES_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveUserProfileToMap(userObj) {
+    if (!userObj || !userObj.uid) return;
+    const map = loadProfilesMap();
+    map[userObj.uid] = {
+      uid: userObj.uid,
+      name: userObj.name,
+      email: userObj.email,
+      discordId: userObj.discordId || "",
+      discordHandle: userObj.discordHandle || "",
+      hexColor: userObj.hexColor || "#38bdf8",
+      photoURL: userObj.photoURL || "",
+      provider: userObj.provider || "email",
+      role: userObj.role || "member"
+    };
+    localStorage.setItem(PROFILES_KEY, JSON.stringify(map));
+  }
+
+  function getSavedProfile(uid) {
+    if (!uid) return null;
+    const map = loadProfilesMap();
+    return map[uid] || null;
+  }
 
   function resolveRoleFromEmail(email, explicitRole) {
     if (explicitRole) return explicitRole;
-    const lower = (email || "").toLowerCase();
+    const lower = (email || "").toLowerCase().trim();
     const cfg = window.NASHA_CONFIG || {};
-    if ((cfg.founderEmails || []).includes(lower) || lower.includes("chief") || lower.includes("founder")) {
+    if ((cfg.founderEmails || []).map((e) => e.toLowerCase()).includes(lower)) {
       return "founder";
     }
-    if ((cfg.adminEmails || []).includes(lower) || lower.includes("admin") || lower.includes("staff")) {
+    if ((cfg.adminEmails || []).map((e) => e.toLowerCase()).includes(lower)) {
       return "admin";
     }
     return "member";
+  }
+
+  function buildIndividualUser({ uid, name, email, photoURL, provider }) {
+    const cleanEmail = (email || "").trim().toLowerCase();
+    const stableUid = uid || ("usr_" + btoa(cleanEmail || String(Date.now())).replace(/[^a-zA-Z0-9]/g, "").slice(0, 16));
+    const existing = getSavedProfile(stableUid);
+    const computedRole = resolveRoleFromEmail(cleanEmail, existing && existing.role);
+
+    const merged = {
+      uid: stableUid,
+      name: (existing && existing.name) || name || (cleanEmail ? cleanEmail.split("@")[0] : "Member"),
+      email: cleanEmail,
+      discordId: (existing && existing.discordId) || "",
+      discordHandle: (existing && existing.discordHandle) || "",
+      hexColor: (existing && existing.hexColor) || "#38bdf8",
+      photoURL: photoURL || (existing && existing.photoURL) || "",
+      provider: provider || (existing && existing.provider) || "google",
+      role: computedRole
+    };
+
+    saveUserProfileToMap(merged);
+    return merged;
   }
 
   function loadStoredSession() {
@@ -33,6 +88,7 @@ window.NashaAuth = (function () {
   function setSession(userObj) {
     currentUser = userObj;
     if (userObj) {
+      saveUserProfileToMap(userObj);
       localStorage.setItem(SESSION_KEY, JSON.stringify(userObj));
     } else {
       localStorage.removeItem(SESSION_KEY);
@@ -135,10 +191,6 @@ window.NashaAuth = (function () {
         display: none; background: rgba(244, 63, 94, 0.16); border: 1px solid rgba(244, 63, 94, 0.45);
         color: #fda4af; padding: 0.55rem 0.75rem; border-radius: 10px; font-size: 0.84rem;
       }
-      .nasha-demo-box {
-        margin-top: 1.15rem; padding-top: 0.95rem; border-top: 1px solid rgba(56, 189, 248, 0.18);
-        display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.82rem; color: #94a3b8;
-      }
     `;
     document.head.appendChild(style);
   }
@@ -153,10 +205,10 @@ window.NashaAuth = (function () {
     wrapper.innerHTML = `
       <div class="nasha-modal-card" role="dialog" aria-modal="true" aria-labelledby="nashaAuthTitle">
         <button type="button" class="nasha-modal-close" id="nashaAuthClose" aria-label="Close modal">&times;</button>
-        <div class="nasha-modal-badge">🍁.Nʌsʜʌ™.🍁 ACCOUNT &amp; AUTH GATE</div>
-        <h2 id="nashaAuthTitle" class="nasha-modal-title">Sign In to Your Profile</h2>
+        <div class="nasha-modal-badge">🍁.Nʌsʜʌ™.🍁 INDIVIDUAL ACCOUNT SIGN-IN</div>
+        <h2 id="nashaAuthTitle" class="nasha-modal-title">Sign In to Your Account</h2>
         <p class="nasha-modal-sub" id="nashaAuthSub">
-          Use Google or Email to verify your identity, RSVP to #GVWY drops, or unlock Founder &amp; Admin consoles.
+          Each Google or Email account gets its own separate profile, #HEX color, and Discord link.
         </p>
 
         <div class="nasha-auth-tabs" role="tablist">
@@ -178,12 +230,12 @@ window.NashaAuth = (function () {
 
         <form id="nashaEmailAuthForm" class="nasha-auth-form">
           <div id="nashaNameFieldWrap" style="display:none;">
-            <label class="nasha-label" for="nashaDisplayName">Discord / Display Name</label>
-            <input class="nasha-input" type="text" id="nashaDisplayName" placeholder="e.g. TWILIGHT or Tonmoy" />
+            <label class="nasha-label" for="nashaDisplayName">Your Name</label>
+            <input class="nasha-input" type="text" id="nashaDisplayName" placeholder="Your display name" />
           </div>
           <div>
             <label class="nasha-label" for="nashaEmailInput">Email Address</label>
-            <input class="nasha-input" type="email" id="nashaEmailInput" required placeholder="you@nasha.gg" />
+            <input class="nasha-input" type="email" id="nashaEmailInput" required placeholder="you@example.com" />
           </div>
           <div>
             <label class="nasha-label" for="nashaPasswordInput">Password</label>
@@ -194,18 +246,6 @@ window.NashaAuth = (function () {
             Sign In with Email
           </button>
         </form>
-
-        <div class="nasha-demo-box">
-          <span style="font-size:0.76rem;text-align:center;">Quick Role Demo Access (For Server Preview):</span>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
-            <button type="button" id="nashaFounderDemoBtn" class="nasha-btn-ghost-sm" style="padding:0.45rem;">
-              👑 Founder (.CHIEF.)
-            </button>
-            <button type="button" id="nashaAdminDemoBtn" class="nasha-btn-ghost-sm" style="padding:0.45rem;">
-              🛡️ Admin (.SOORAN.)
-            </button>
-          </div>
-        </div>
       </div>
     `;
     document.body.appendChild(wrapper);
@@ -220,8 +260,6 @@ window.NashaAuth = (function () {
     const submitBtn = document.getElementById("nashaEmailSubmitBtn");
     const form = document.getElementById("nashaEmailAuthForm");
     const googleBtn = document.getElementById("nashaGoogleSignInBtn");
-    const founderDemoBtn = document.getElementById("nashaFounderDemoBtn");
-    const adminDemoBtn = document.getElementById("nashaAdminDemoBtn");
     let mode = "login";
 
     closeBtn.addEventListener("click", closeModal);
@@ -246,50 +284,38 @@ window.NashaAuth = (function () {
     googleBtn.addEventListener("click", async () => {
       showError("");
       const fbAuth = window.NashaDB && window.NashaDB.getAuth();
-      if (fbAuth && typeof firebase !== "undefined") {
-        try {
-          const provider = new firebase.auth.GoogleAuthProvider();
-          const res = await fbAuth.signInWithPopup(provider);
-          const role = resolveRoleFromEmail(res.user.email);
-          setSession({
-            uid: res.user.uid,
-            name: res.user.displayName || "Nasha Member",
-            email: res.user.email,
-            discordId: "",
-            discordHandle: "",
-            hexColor: "#38bdf8",
-            photoURL: res.user.photoURL || "",
-            provider: "google",
-            role
-          });
-          closeModal();
-        } catch (err) {
-          showError(err.message || "Google sign-in failed.");
-        }
-      } else {
-        setSession({
-          uid: "google-local-" + Date.now(),
-          name: "Tonmoy (Google)",
-          email: "founder@nasha.gg",
-          discordId: "1089451239847125012",
-          discordHandle: "@pika_chu0_0",
-          hexColor: "#38bdf8",
-          provider: "google",
-          role: "founder"
+      if (!fbAuth || typeof firebase === "undefined") {
+        showError("Firebase Auth is not configured yet. Add your Firebase Web App keys in firebase-config.js and enable Google Sign-In in Firebase Console.");
+        return;
+      }
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: "select_account" });
+        const res = await fbAuth.signInWithPopup(provider);
+        const u = res.user;
+        const userObj = buildIndividualUser({
+          uid: u.uid,
+          name: u.displayName || (u.email ? u.email.split("@")[0] : "Google User"),
+          email: u.email || "",
+          photoURL: u.photoURL || "",
+          provider: "google"
         });
+        setSession(userObj);
         closeModal();
+      } catch (err) {
+        showError(err.message || "Google sign-in failed.");
       }
     });
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       showError("");
-      const email = document.getElementById("nashaEmailInput").value.trim();
+      const email = document.getElementById("nashaEmailInput").value.trim().toLowerCase();
       const password = document.getElementById("nashaPasswordInput").value;
       const displayName = document.getElementById("nashaDisplayName").value.trim() || email.split("@")[0];
       const fbAuth = window.NashaDB && window.NashaDB.getAuth();
 
-      if (fbAuth) {
+      if (fbAuth && typeof firebase !== "undefined") {
         try {
           let cred;
           if (mode === "signup") {
@@ -298,61 +324,30 @@ window.NashaAuth = (function () {
           } else {
             cred = await fbAuth.signInWithEmailAndPassword(email, password);
           }
-          setSession({
+          const userObj = buildIndividualUser({
             uid: cred.user.uid,
             name: cred.user.displayName || displayName,
-            email: cred.user.email,
-            discordId: "",
-            discordHandle: "",
-            hexColor: "#38bdf8",
-            provider: "email",
-            role: resolveRoleFromEmail(cred.user.email)
+            email: cred.user.email || email,
+            photoURL: cred.user.photoURL || "",
+            provider: "email"
           });
+          setSession(userObj);
           closeModal();
         } catch (err) {
-          showError(err.message || "Authentication error.");
+          showError(err.message || "Email authentication failed.");
         }
       } else {
-        setSession({
-          uid: "email-local-" + Date.now(),
+        // Local per-user account fallback keyed by email
+        const userObj = buildIndividualUser({
+          uid: null,
           name: displayName,
           email,
-          discordId: "",
-          discordHandle: "@" + displayName.toLowerCase().replace(/\s+/g, "_"),
-          hexColor: "#38bdf8",
-          provider: "email",
-          role: resolveRoleFromEmail(email)
+          photoURL: "",
+          provider: "email"
         });
+        setSession(userObj);
         closeModal();
       }
-    });
-
-    founderDemoBtn.addEventListener("click", () => {
-      setSession({
-        uid: "founder-demo-01",
-        name: "TONMOY",
-        email: "chief@nasha.gg",
-        discordId: "1089451239847125012",
-        discordHandle: "@pika_chu0_0",
-        hexColor: "#38bdf8",
-        provider: "demo",
-        role: "founder"
-      });
-      closeModal();
-    });
-
-    adminDemoBtn.addEventListener("click", () => {
-      setSession({
-        uid: "admin-demo-02",
-        name: "SOORAN",
-        email: "admin@nasha.gg",
-        discordId: "871230948120394812",
-        discordHandle: "@nsh_sooran",
-        hexColor: "#818cf8",
-        provider: "demo",
-        role: "admin"
-      });
-      closeModal();
     });
   }
 
@@ -412,11 +407,11 @@ window.NashaAuth = (function () {
     if (!user) {
       el.innerHTML = `
         <div class="glass-card" style="max-width:560px;margin:0 auto;text-align:center;padding:2.25rem;">
-          <div class="channel-tag" style="margin-bottom:0.75rem;">🔒 AUTH GATE • PROFILE SIGN-IN REQUIRED</div>
+          <div class="channel-tag" style="margin-bottom:0.75rem;">🔒 AUTH GATE • SIGN IN REQUIRED</div>
           <h2 style="margin:0 0 0.6rem;">${title}</h2>
           <p style="color:var(--text-muted);margin:0 0 1.4rem;">${desc}</p>
-          <button type="button" class="nasha-btn-primary" onclick="window.NashaAuth.openModal('login', '${desc.replace(/'/g, "\'")}')">
-            Open Profile Sign-In
+          <button type="button" class="nasha-btn-primary" onclick="window.NashaAuth.openModal('login', '${desc.replace(/'/g, "\\'")}')">
+            Open Sign-In Modal
           </button>
         </div>
       `;
@@ -424,9 +419,9 @@ window.NashaAuth = (function () {
       el.innerHTML = `
         <div class="glass-card" style="max-width:560px;margin:0 auto;text-align:center;padding:2.25rem;border-color:rgba(244,63,94,0.45);">
           <div class="channel-tag" style="margin-bottom:0.75rem;color:#fda4af;border-color:rgba(244,63,94,0.4);">⛔ INSUFFICIENT CLEARANCE</div>
-          <h2 style="margin:0 0 0.6rem;">${requiredRole === "founder" ? "Founder (.CHIEF. / .DUCHESS.) Access Only" : "Admin / Staff Access Only"}</h2>
+          <h2 style="margin:0 0 0.6rem;">${requiredRole === "founder" ? "Founder Access Only" : "Admin / Staff Access Only"}</h2>
           <p style="color:var(--text-muted);margin:0 0 1.4rem;">
-            Signed in as <strong>${user.name}</strong> (Role: <code>${user.role.toUpperCase()}</code>). Switch accounts via the Profile Icon to access this panel.
+            Signed in as <strong>${user.name}</strong> (Role: <code>${user.role.toUpperCase()}</code>). Switch to an authorized account to open this panel.
           </p>
           <button type="button" class="nasha-btn-secondary" onclick="window.NashaAuth.openModal('login')">
             Switch Account
@@ -444,17 +439,14 @@ window.NashaAuth = (function () {
     if (fbAuth) {
       fbAuth.onAuthStateChanged((user) => {
         if (user) {
-          setSession({
+          const userObj = buildIndividualUser({
             uid: user.uid,
-            name: user.displayName || user.email.split("@")[0],
-            email: user.email,
-            discordId: "",
-            discordHandle: "",
-            hexColor: "#38bdf8",
+            name: user.displayName || (user.email ? user.email.split("@")[0] : "Member"),
+            email: user.email || "",
             photoURL: user.photoURL || "",
-            provider: user.providerData[0]?.providerId || "firebase",
-            role: resolveRoleFromEmail(user.email)
+            provider: (user.providerData && user.providerData[0] && user.providerData[0].providerId) || "firebase"
           });
+          setSession(userObj);
         }
       });
     }
