@@ -9,9 +9,9 @@ window.NASHA_CONFIG = {
   defaultBoosts: 15,
   maxBoosts: 36,
   // Optional: permanent invite code from https://discord.gg/YOUR_CODE for bot-free member count sync
-  inviteCode: "YOUR_PERMANENT_INVITE_CODE",
+  inviteCode: "https://discord.gg/nasha",
   // Optional: 18-19 digit Discord server ID if Server Widget is enabled for online count
-  guildId: "YOUR_GUILD_ID",
+  guildId: "1367356170347479040",
   discordInvite: "https://discord.gg/nasha",
   founderEmails: ["muntasirtonmoy10@gmail.com"],
   adminEmails: ["muntasirtonmoy10@gmail.com"],
