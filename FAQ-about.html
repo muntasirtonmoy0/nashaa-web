@@ -10,6 +10,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="style.css" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -38,14 +41,14 @@
         A Discoverable Sanctuary for <span class="text-bio-gradient">2,720+ Members</span>
       </h1>
       <p class="text-sm text-slate-300 leading-relaxed">
-        <strong>🍁.Nʌsʜʌ™.🍁</strong> is structured for effortless navigation and lively community energy: grab roles and colors in <code class="text-cyan-300">#CLICK</code>, <code class="text-cyan-300">#ROLE</code>, <code class="text-cyan-300">#HEX</code>, <code class="text-cyan-300">#RICH</code>, and <code class="text-cyan-300">#TAG</code>; stay updated via <code class="text-cyan-300">#ANNC</code> and <code class="text-cyan-300">#MAIL</code>; follow <code class="text-cyan-300">#LAW</code>; chat in <code class="text-cyan-300">#CHAT</code>; win prizes in <code class="text-cyan-300">#GVWY</code>; and vibe in <code class="text-cyan-300">Music vc</code> and dynamic voice rooms.
+        <strong>🍁.Nʌsʜʌ™.🍁</strong> is built for effortless navigation and lively community energy: pick custom role colors and VIP perks, equip the official <strong class="text-rose-300">💎 ඞINE</strong> server tag, follow server announcements and community guidelines, enter Nitro giveaways, and hang out in music and midnight voice lounges.
       </p>
     </section>
 
-    <!-- FAQ & #LAW Accordion -->
+    <!-- FAQ Accordion -->
     <section class="space-y-5">
       <h2 class="reveal-up font-display text-2xl sm:text-4xl font-extrabold text-white text-center">
-        Frequently Asked <span class="text-bio-gradient">Questions (#LAW)</span>
+        Frequently Asked <span class="text-bio-gradient">Questions</span>
       </h2>
       <div id="faq-accordion" class="space-y-4"></div>
     </section>
@@ -57,16 +60,16 @@
   <script>
     const faqs = [
       {
-        q: 'How do I get #HEX, #RICH, or the Nsh 🍁 tag?',
-        a: 'Visit #CLICK, #ROLE, #HEX, #RICH, and #TAG in the server to select your role colors and boost perks.'
+        q: 'How do I get custom colors, VIP perks, or the 💎 ඞINE server tag?',
+        a: 'Open the role selection and server tag channels inside 🍁.Nʌsʜʌ™.🍁 to pick your custom color role and equip the 💎 ඞINE tag on your Discord profile.'
       },
       {
-        q: 'How does the 15/36 Boost Goal work?',
-        a: 'Every server boost pushes 🍁.Nʌsʜʌ™.🍁 toward higher boost milestones, unlocking extra perks, voice quality, and community rewards.'
+        q: 'How do I enter server giveaways and events?',
+        a: 'Visit the Events & Giveaways page on this website or check the giveaways channel inside Discord to enter active Nitro and community drops.'
       },
       {
-        q: 'Where do I contact staff or report issues (#MAIL & #LAW)?',
-        a: 'Follow all rules in #LAW and reach out via #MAIL or staff channels for assistance.'
+        q: 'Where do I contact staff or report an issue?',
+        a: 'Read the community rules in the server and open a support ticket or reach out to any verified staff member listed on the Staff Info page.'
       }
     ];
 
