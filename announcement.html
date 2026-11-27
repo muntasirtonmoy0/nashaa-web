@@ -67,7 +67,7 @@
       container.innerHTML = list.map(item => `
         <article class="tilt-card glass-card rounded-3xl p-6 sm:p-8 reveal-up is-visible">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-            <span class="channel-tag">${item.tag || "#ANNC"}</span>
+            <span class="channel-tag">${(item.tag || "UPDATE").replace(/^#/, "")}</span>
             <span class="text-xs text-slate-400">
               By <strong class="text-slate-200">${item.author || "Staff"}</strong> • ${item.createdAt ? new Date(item.createdAt).toLocaleString() : ""}
             </span>
