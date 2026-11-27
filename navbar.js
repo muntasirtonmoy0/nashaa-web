@@ -1,5 +1,5 @@
 /**
- * 🍁.Nʌsʜʌ™.🍁 — Navigation Bar (Admin Panel shown only in Profile for authorized emails)
+ * 🍁.Nʌsʜʌ™.🍁 — Navigation Bar (Admin & Founder Panel shown in Profile for authorized emails -> admin.html)
  */
 
 window.attachTiltCards = function () {
@@ -49,7 +49,6 @@ window.copyInviteLink = function () {
 };
 
 window.NashaNavbar = (function () {
-  // Public links only — Admin & Owner/Founder controls live inside Profile for authorized emails
   const NAV_LINKS = [
     { href: "index.html", label: "Home" },
     { href: "events-giveaway.html", label: "Events & #GVWY" },
@@ -85,7 +84,7 @@ window.NashaNavbar = (function () {
     const roleLabel = user ? (user.role === "founder" ? "OWNER / FOUNDER" : user.role.toUpperCase()) : "GUEST";
 
     const adminDropdownLink = canAdmin
-      ? `<a href="admin-panel.html" class="nasha-dropdown-item">🛡️ Admin Panel</a>`
+      ? `<a href="admin.html" class="nasha-dropdown-item">🛡️ Admin &amp; Founder Panel</a>`
       : "";
 
     const profileWidgetHtml = user
@@ -140,7 +139,7 @@ window.NashaNavbar = (function () {
         <div class="nasha-mobile-drawer" id="nashaMobileDrawer">
           ${linksHtml}
           <a href="profile.html" class="nasha-nav-link ${active.toLowerCase() === "profile.html" ? "active" : ""}">My Profile</a>
-          ${canAdmin ? `<a href="admin-panel.html" class="nasha-nav-link ${active.toLowerCase() === "admin-panel.html" ? "active" : ""}">Admin Panel</a>` : ""}
+          ${canAdmin ? `<a href="admin.html" class="nasha-nav-link ${active.toLowerCase() === "admin.html" ? "active" : ""}">Admin &amp; Founder Panel</a>` : ""}
         </div>
       </div>
     `;
