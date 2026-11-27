@@ -35,6 +35,7 @@
           <!-- ADMIN PANEL VIEW -->
           <div id="adminModeSection">
             <div class="grid-2">
+              <!-- Publish Announcement -> announcement.html -->
               <div class="glass-card">
                 <span class="channel-tag">ANNOUNCEMENT PUBLISHER → announcement.html</span>
                 <h2 style="margin:0.75rem 0 1rem;">Make an Announcement</h2>
@@ -60,6 +61,7 @@
                 </div>
               </div>
 
+              <!-- Host Giveaway / Event -->
               <div class="glass-card">
                 <span class="channel-tag">#GVWY &amp; EVENTS PUBLISHER</span>
                 <h2 style="margin:0.75rem 0 1rem;">Host New Giveaway or Event</h2>
@@ -175,6 +177,18 @@
                     <button type="submit" class="nasha-btn-secondary">Update Server Stats</button>
                   </form>
                 </div>
+
+                <div class="glass-card" style="border-color:rgba(251,191,36,0.45);">
+                  <span class="channel-tag">BOT-FREE DISCORD SYNC</span>
+                  <h3 style="margin:0.65rem 0 0.75rem;">Invite &amp; Widget Sync Settings</h3>
+                  <form id="founderSettingsForm" style="display:flex;flex-direction:column;gap:0.85rem;">
+                    <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;cursor:pointer;">
+                      <input type="checkbox" id="inAutoSync" checked />
+                      <span>Auto-sync member &amp; online count via Discord invite &amp; widget</span>
+                    </label>
+                    <button type="submit" class="nasha-btn-secondary">Save Sync Settings</button>
+                  </form>
+                </div>
               </div>
             </div>
           </div>
@@ -287,6 +301,9 @@
       document.getElementById("inMembers").value = stats.members;
       document.getElementById("inAnnc").value = stats.announcement || "";
 
+      const settings = await window.NashaDB.getSettings();
+      document.getElementById("inAutoSync").checked = Boolean(settings.autoSyncInvite);
+
       const assignments = await window.NashaDB.getRoleAssignments();
       document.getElementById("roleAssignmentsList").innerHTML = assignments.length
         ? assignments.map(r => `
@@ -300,7 +317,6 @@
         `).join("")
         : `<p style="color:var(--text-muted);font-size:0.84rem;">No custom email role assignments yet.</p>`;
 
-      // Logged-in staff & founders directory with inline display-name & Discord ID editor
       const staffDirectory = await window.NashaDB.getStaff();
       document.getElementById("founderStaffProfilesList").innerHTML = staffDirectory.length
         ? staffDirectory.map(st => `
@@ -423,6 +439,15 @@
       await window.NashaDB.logActivity(`Updated server stats (members: ${membersVal})`, "stats");
       loadFounderData();
       if (window.showToast) window.showToast("Server stats updated!");
+    });
+
+    document.getElementById("founderSettingsForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const autoSync = document.getElementById("inAutoSync").checked;
+      await window.NashaDB.updateSettings({ autoSyncInvite: autoSync });
+      await window.NashaDB.logActivity(`Updated auto-sync setting: ${autoSync ? "ON" : "OFF"}`, "settings");
+      loadFounderData();
+      if (window.showToast) window.showToast("Discord sync settings saved!");
     });
 
     document.addEventListener("DOMContentLoaded", syncAdminAccess);
