@@ -97,6 +97,10 @@ window.NashaDB = (function () {
     return VALID_RANKS.includes(clean) ? clean : "member";
   }
 
+  function hasValidDiscordId(val) {
+    return Boolean(val && /^\d{17,20}$/.test(String(val).trim()));
+  }
+
   const DEFAULT_DATA = {
     stats: {
       members: 2720,
@@ -179,30 +183,36 @@ window.NashaDB = (function () {
 
     const byKey = new Map();
 
+    // 1. Add logged-in users with a staff-tier rank
     profiles.forEach((p) => {
       const cleanEmail = String(p.email || "").trim().toLowerCase();
       const assigned = assignments.find((a) => String(a.email || "").toLowerCase() === cleanEmail);
       const effectiveRank = normalizeRank((assigned && assigned.role) || p.role);
       if (!STAFF_RANKS.includes(effectiveRank)) return;
 
-      const hasDiscordId = p.discordId && /^\d{17,20}$/.test(String(p.discordId));
+      const boundDiscord = hasValidDiscordId(p.discordId);
       const isOnlineInWidget = widgetOnline.some(
         (wm) =>
-          (hasDiscordId && String(wm.id) === String(p.discordId)) ||
+          (boundDiscord && String(wm.id) === String(p.discordId)) ||
           (p.discordHandle && String(wm.username || "").toLowerCase() === String(p.discordHandle).replace(/^@/, "").toLowerCase())
       );
 
-      const mapKey = hasDiscordId ? String(p.discordId) : (p.uid || cleanEmail);
+      const mapKey = boundDiscord ? String(p.discordId) : (p.uid || cleanEmail);
+      const resolvedAvatar = boundDiscord
+        ? (p.avatarUrl || "")
+        : (p.googleAvatarUrl || p.photoURL || p.avatarUrl || "");
+
       byKey.set(mapKey, {
         id: p.uid || cleanEmail,
         uid: p.uid || "",
         email: cleanEmail,
         name: p.name || cleanEmail.split("@")[0] || "Staff",
         rank: effectiveRank,
-        discordId: p.discordId || "Not Linked",
+        discordId: boundDiscord ? String(p.discordId) : "Not Linked",
         discordHandle: p.discordHandle || "",
-        avatarUrl: p.avatarUrl || (hasDiscordId ? "" : (p.photoURL || "")),
-        decorationUrl: p.decorationUrl || "",
+        googleAvatarUrl: p.googleAvatarUrl || p.photoURL || "",
+        avatarUrl: resolvedAvatar,
+        decorationUrl: boundDiscord ? (p.decorationUrl || "") : "",
         hexColor: p.hexColor || "#38bdf8",
         onlineInDiscord: isOnlineInWidget,
         role: `${effectiveRank.charAt(0).toUpperCase() + effectiveRank.slice(1)} • Verified Account`,
@@ -211,21 +221,20 @@ window.NashaDB = (function () {
       });
     });
 
+    // 2. Merge pre-registered / Claim Key Discord staff entries (Discord profile takes priority when bound)
     manualStaff.forEach((st) => {
       const rank = normalizeRank(st.rank || st.roleRank || st.role);
-      const hasDiscordId = st.discordId && /^\d{17,20}$/.test(String(st.discordId));
-      const mapKey = hasDiscordId ? String(st.discordId) : (st.uid || st.email || st.id);
+      const boundDiscord = hasValidDiscordId(st.discordId);
+      const mapKey = boundDiscord ? String(st.discordId) : (st.uid || st.email || st.id);
       const existing = byKey.get(mapKey);
-      const isOnlineInWidget = widgetOnline.some((wm) => hasDiscordId && String(wm.id) === String(st.discordId));
+      const isOnlineInWidget = widgetOnline.some((wm) => boundDiscord && String(wm.id) === String(st.discordId));
 
-      const resolvedAvatar =
-        st.avatarUrl ||
-        (existing && existing.avatarUrl) ||
-        (hasDiscordId ? "" : ((existing && existing.photoURL) || ""));
-      const resolvedDeco =
-        st.decorationUrl ||
-        (existing && existing.decorationUrl) ||
-        "";
+      const resolvedAvatar = boundDiscord
+        ? (st.avatarUrl || (existing && existing.avatarUrl) || "")
+        : (st.avatarUrl || (existing && existing.avatarUrl) || (existing && existing.googleAvatarUrl) || "");
+      const resolvedDeco = boundDiscord
+        ? (st.decorationUrl ?? (existing && existing.decorationUrl) ?? "")
+        : "";
       const resolvedName =
         (st.lockCustomName && st.name) ||
         st.name ||
@@ -240,7 +249,7 @@ window.NashaDB = (function () {
         email: st.claimedByEmail || st.email || (existing && existing.email) || "",
         name: resolvedName,
         rank,
-        discordId: st.discordId || (existing && existing.discordId) || "Not Linked",
+        discordId: boundDiscord ? String(st.discordId) : ((existing && existing.discordId) || "Not Linked"),
         discordHandle: st.discordHandle || (existing && existing.discordHandle) || "",
         avatarUrl: resolvedAvatar,
         decorationUrl: resolvedDeco,
@@ -318,12 +327,15 @@ window.NashaDB = (function () {
       snap.forEach((d) => {
         const remote = { uid: d.id, ...d.data() };
         const local = prevList.find((x) => x.uid === remote.uid || (remote.email && x.email === remote.email)) || {};
+        const boundDiscord = hasValidDiscordId(remote.discordId || local.discordId);
+        const googlePhoto = remote.googleAvatarUrl || local.googleAvatarUrl || remote.photoURL || local.photoURL || "";
         list.push({
           ...local,
           ...remote,
+          googleAvatarUrl: googlePhoto,
           name: remote.name || local.name,
-          avatarUrl: remote.avatarUrl || local.avatarUrl || "",
-          decorationUrl: remote.decorationUrl || local.decorationUrl || ""
+          avatarUrl: boundDiscord ? (remote.avatarUrl || local.avatarUrl || "") : (googlePhoto || remote.avatarUrl || local.avatarUrl || ""),
+          decorationUrl: boundDiscord ? (remote.decorationUrl || local.decorationUrl || "") : ""
         });
       });
       writeLocal(STORAGE_KEYS.USER_PROFILES, list);
@@ -483,9 +495,10 @@ window.NashaDB = (function () {
     const merged = {
       ...existing,
       ...userObj,
+      googleAvatarUrl: userObj.googleAvatarUrl || existing.googleAvatarUrl || userObj.photoURL || existing.photoURL || "",
       name: (existing && existing.name) || userObj.name,
-      avatarUrl: (existing && existing.avatarUrl) || userObj.avatarUrl || "",
-      decorationUrl: (existing && existing.decorationUrl) || userObj.decorationUrl || ""
+      avatarUrl: userObj.avatarUrl !== undefined ? userObj.avatarUrl : (existing.avatarUrl || ""),
+      decorationUrl: userObj.decorationUrl !== undefined ? userObj.decorationUrl : (existing.decorationUrl || "")
     };
     if (idx >= 0) list[idx] = merged;
     else list.push(merged);
