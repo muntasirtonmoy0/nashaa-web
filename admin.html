@@ -108,50 +108,82 @@
           <!-- FOUNDER PANEL VIEW -->
           <div id="ownerModeSection" style="display:none;">
             <div class="grid-2">
-              <!-- Column 1: Assign Roles by Email + View Permissions -->
-              <div class="glass-card" style="border-color:rgba(251,191,36,0.45);">
-                <span class="channel-tag" style="color:#fde68a;border-color:rgba(251,191,36,0.45);">ROLE &amp; EMAIL ACCESS CONTROL</span>
-                <h2 style="margin:0.75rem 0 1rem;">Assign User Email to Role</h2>
-                <form id="assignRoleForm" style="display:flex;flex-direction:column;gap:0.85rem;">
-                  <div>
-                    <label class="nasha-label">User Email</label>
-                    <input class="nasha-input" type="email" id="roleEmailInput" placeholder="user@gmail.com" required />
-                  </div>
-                  <div>
-                    <label class="nasha-label">Rank</label>
-                    <select class="nasha-select" id="roleSelectInput">
-                      <option value="founder">founder</option>
-                      <option value="owner">owner</option>
-                      <option value="admin">admin</option>
-                      <option value="moderator">moderator</option>
-                      <option value="staff">staff</option>
-                      <option value="member">member</option>
-                    </select>
-                  </div>
-                  <button type="submit" class="nasha-btn-primary">Save Role Assignment</button>
-                </form>
-
-                <div style="margin-top:1.25rem;padding:0.9rem;border-radius:12px;background:rgba(3,7,18,0.6);border:1px solid rgba(56,189,248,0.2);">
-                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
-                    <strong style="font-size:0.9rem;">Role Permissions Viewer</strong>
-                    <span class="channel-tag" id="permRoleBadge">FOUNDER</span>
-                  </div>
-                  <ul id="rolePermissionsList" style="margin:0;padding-left:1.15rem;color:var(--text-muted);font-size:0.84rem;"></ul>
+              <!-- Column 1: Pre-Register Staff by Discord ID + Claim Key & Role Assignments -->
+              <div style="display:flex;flex-direction:column;gap:1.5rem;">
+                <div class="glass-card" style="border-color:rgba(251,191,36,0.45);">
+                  <span class="channel-tag" style="color:#fde68a;border-color:rgba(251,191,36,0.45);">PRE-REGISTER DISCORD ID + CLAIM KEY</span>
+                  <h2 style="margin:0.75rem 0 0.5rem;">Add Staff by Discord ID</h2>
+                  <p style="color:var(--text-muted);font-size:0.84rem;margin:0 0 1rem;">
+                    Pulls live Discord PFP, Avatar Decoration, Display Name &amp; Username automatically, and generates a one-time Claim Key for the staff member to bind their account later.
+                  </p>
+                  <form id="preRegisterStaffForm" style="display:flex;flex-direction:column;gap:0.8rem;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                      <div>
+                        <label class="nasha-label">Discord User ID (17–20 digits)</label>
+                        <input class="nasha-input" id="preDiscordId" placeholder="1354755206528630894" pattern="\d{17,20}" required />
+                      </div>
+                      <div>
+                        <label class="nasha-label">Rank</label>
+                        <select class="nasha-select" id="preRank">
+                          <option value="founder">founder</option>
+                          <option value="owner">owner</option>
+                          <option value="admin">admin</option>
+                          <option value="moderator">moderator</option>
+                          <option value="staff">staff</option>
+                        </select>
+                      </div>
+                    </div>
+                    <button type="submit" class="nasha-btn-primary">Sync Discord Profile &amp; Generate Claim Key</button>
+                  </form>
                 </div>
 
-                <div style="margin-top:1.25rem;">
-                  <h3 style="margin:0 0 0.65rem;">Assigned Email Ranks</h3>
-                  <div id="roleAssignmentsList" style="display:flex;flex-direction:column;gap:0.6rem;"></div>
+                <div class="glass-card" style="border-color:rgba(251,191,36,0.45);">
+                  <span class="channel-tag" style="color:#fde68a;border-color:rgba(251,191,36,0.45);">ROLE &amp; EMAIL ACCESS CONTROL</span>
+                  <h2 style="margin:0.75rem 0 1rem;">Assign User Email to Role</h2>
+                  <form id="assignRoleForm" style="display:flex;flex-direction:column;gap:0.85rem;">
+                    <div>
+                      <label class="nasha-label">User Email</label>
+                      <input class="nasha-input" type="email" id="roleEmailInput" placeholder="user@gmail.com" required />
+                    </div>
+                    <div>
+                      <label class="nasha-label">Rank</label>
+                      <select class="nasha-select" id="roleSelectInput">
+                        <option value="founder">founder</option>
+                        <option value="owner">owner</option>
+                        <option value="admin">admin</option>
+                        <option value="moderator">moderator</option>
+                        <option value="staff">staff</option>
+                        <option value="member">member</option>
+                      </select>
+                    </div>
+                    <button type="submit" class="nasha-btn-primary">Save Role Assignment</button>
+                  </form>
+
+                  <div style="margin-top:1.25rem;padding:0.9rem;border-radius:12px;background:rgba(3,7,18,0.6);border:1px solid rgba(56,189,248,0.2);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                      <strong style="font-size:0.9rem;">Role Permissions Viewer</strong>
+                      <span class="channel-tag" id="permRoleBadge">FOUNDER</span>
+                    </div>
+                    <ul id="rolePermissionsList" style="margin:0;padding-left:1.15rem;color:var(--text-muted);font-size:0.84rem;"></ul>
+                  </div>
+
+                  <div style="margin-top:1.25rem;">
+                    <h3 style="margin:0 0 0.65rem;">Assigned Email Ranks</h3>
+                    <div id="roleAssignmentsList" style="display:flex;flex-direction:column;gap:0.6rem;"></div>
+                  </div>
                 </div>
               </div>
 
-              <!-- Column 2: Edit Logged-In Staff Display Names & Real-Time Discord IDs + Staff Activity -->
+              <!-- Column 2: Manage Staff Display Names, Discord IDs & Claim Keys + Activity + Server Stats -->
               <div style="display:flex;flex-direction:column;gap:1.5rem;">
                 <div class="glass-card" style="border-color:rgba(251,191,36,0.45);">
-                  <span class="channel-tag" style="color:#fde68a;border-color:rgba(251,191,36,0.45);">LIVE STAFF DISPLAY NAMES &amp; DISCORD IDs → staff-info.html</span>
-                  <h2 style="margin:0.75rem 0 0.5rem;">Logged-In Staff &amp; Founders</h2>
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                    <span class="channel-tag" style="color:#fde68a;border-color:rgba(251,191,36,0.45);">STAFF ROSTER, CLAIM KEYS &amp; LIVE DISCORD SYNC</span>
+                    <button type="button" class="nasha-btn-ghost-sm" onclick="manualForceSyncDiscord()">↻ Sync PFPs &amp; Decos Now</button>
+                  </div>
+                  <h2 style="margin:0.75rem 0 0.5rem;">Staff &amp; Founders Directory</h2>
                   <p style="color:var(--text-muted);font-size:0.84rem;margin:0 0 1rem;">
-                    Edit any staff member's display name or 18-digit Discord ID—changes appear live on <strong>staff-info.html</strong>.
+                    Edit any staff member's display name or Discord ID, or copy their Claim Key to send them. Changes appear live on <strong>staff-info.html</strong>.
                   </p>
                   <div id="founderStaffProfilesList" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
                 </div>
@@ -228,8 +260,8 @@
       if (isOwnerMode && canFounder) {
         document.getElementById("panelKicker").textContent = "👑 FOUNDER PANEL";
         document.getElementById("panelKicker").style.color = "#fbbf24";
-        document.getElementById("panelTitle").textContent = "Founder Panel — Roles, Staff Names & Activity";
-        document.getElementById("panelSubtitle").textContent = "Assign ranks, edit staff display names & Discord IDs, and view all staff activity.";
+        document.getElementById("panelTitle").textContent = "Founder Panel — Roles, Staff Discord Sync & Activity";
+        document.getElementById("panelSubtitle").textContent = "Pre-register Discord IDs with Claim Keys, edit staff display names, assign ranks, and monitor activity.";
         toggleBtn.textContent = "🛡️ Switch Back to Admin Panel";
         adminSec.style.display = "none";
         ownerSec.style.display = "block";
@@ -267,6 +299,20 @@
     document.getElementById("roleSelectInput").addEventListener("change", (e) => {
       renderRolePermissions(e.target.value);
     });
+
+    async function manualForceSyncDiscord() {
+      if (window.showToast) window.showToast("Syncing live Discord avatars & decorations...");
+      await window.refreshAllStaffDiscordProfiles();
+      loadFounderData();
+      if (window.showToast) window.showToast("Discord PFPs & Avatar Decorations synced!");
+    }
+
+    function copyClaimKey(key) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(key).catch(() => {});
+      }
+      if (window.showToast) window.showToast(`Copied Claim Key: ${key}`);
+    }
 
     async function loadAdminData() {
       const anncs = await window.NashaDB.getAnnouncements();
@@ -319,25 +365,34 @@
 
       const staffDirectory = await window.NashaDB.getStaff();
       document.getElementById("founderStaffProfilesList").innerHTML = staffDirectory.length
-        ? staffDirectory.map(st => `
-          <div style="padding:0.8rem;border:1px solid rgba(251,191,36,0.25);border-radius:12px;background:rgba(3,7,18,0.58);">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
-              <div>
-                <span class="channel-tag">${st.rank}</span>
-                <span style="font-size:0.78rem;color:var(--text-muted);margin-left:0.35rem;">${st.email || ""}</span>
+        ? staffDirectory.map(st => {
+            const keyBadge = st.claimKey
+              ? (st.claimedByEmail
+                  ? `<span style="font-size:0.74rem;color:#4ade80;">✓ Bound to ${st.claimedByEmail}</span>`
+                  : `<button type="button" class="nasha-btn-ghost-sm" style="padding:0.2rem 0.55rem;font-size:0.74rem;" onclick="copyClaimKey('${st.claimKey}')">🔑 Key: ${st.claimKey} (Copy)</button>`)
+              : "";
+            return `
+              <div style="padding:0.8rem;border:1px solid rgba(251,191,36,0.25);border-radius:12px;background:rgba(3,7,18,0.58);">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.55rem;">
+                  <div style="display:flex;align-items:center;gap:0.5rem;">
+                    ${st.avatarUrl ? `<img src="${st.avatarUrl}" alt="" style="width:26px;height:26px;border-radius:50%;object-fit:cover;" />` : ""}
+                    <span class="channel-tag">${st.rank}</span>
+                    <span style="font-size:0.78rem;color:var(--text-muted);">${st.discordHandle || st.email || ""}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:0.45rem;">
+                    ${keyBadge}
+                    ${st.id && st.id.startsWith("st-") ? `<button type="button" class="nasha-btn-ghost-sm" style="padding:0.2rem 0.5rem;font-size:0.72rem;color:#fda4af;" onclick="deleteStaffEntry('${st.id}')">✕</button>` : ""}
+                  </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:0.5rem;align-items:center;">
+                  <input class="nasha-input" id="edit-staff-name-${st.id}" value="${(st.name || "").replace(/"/g, "&quot;")}" placeholder="Display Name" style="padding:0.45rem 0.65rem;font-size:0.85rem;" />
+                  <input class="nasha-input" id="edit-staff-did-${st.id}" value="${st.discordId === "Not Linked" ? "" : (st.discordId || "")}" placeholder="Discord User ID" style="padding:0.45rem 0.65rem;font-size:0.85rem;" />
+                  <button type="button" class="nasha-btn-ghost-sm" onclick="saveEditedStaff('${st.id}', '${st.uid || ""}')">Save</button>
+                </div>
               </div>
-              <span style="font-size:0.75rem;color:${st.onlineInDiscord ? "#4ade80" : "#94a3b8"};">
-                ${st.onlineInDiscord ? "● Online in Discord" : "○ Synced"}
-              </span>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:0.5rem;align-items:center;">
-              <input class="nasha-input" id="edit-staff-name-${st.id}" value="${(st.name || "").replace(/"/g, "&quot;")}" placeholder="Display Name" style="padding:0.45rem 0.65rem;font-size:0.85rem;" />
-              <input class="nasha-input" id="edit-staff-did-${st.id}" value="${st.discordId === "Not Linked" ? "" : (st.discordId || "")}" placeholder="Discord User ID" style="padding:0.45rem 0.65rem;font-size:0.85rem;" />
-              <button type="button" class="nasha-btn-ghost-sm" onclick="saveEditedStaff('${st.id}', '${st.uid || ""}')">Save</button>
-            </div>
-          </div>
-        `).join("")
-        : `<p style="color:var(--text-muted);font-size:0.84rem;">No logged-in staff or founders found yet.</p>`;
+            `;
+          }).join("")
+        : `<p style="color:var(--text-muted);font-size:0.84rem;">No staff or founders added yet.</p>`;
 
       const activity = await window.NashaDB.getActivity();
       document.getElementById("founderActivityList").innerHTML = activity.length
@@ -360,20 +415,41 @@
       const newDiscordId = didInput ? didInput.value.trim() : "";
       if (!newName) return;
 
+      const live = /^\d{17,20}$/.test(newDiscordId) ? await window.fetchLiveDiscordUser(newDiscordId) : null;
+
       if (uid) {
         await window.NashaDB.updateUserProfileByFounder(uid, {
           name: newName,
-          discordId: newDiscordId
+          discordId: newDiscordId,
+          avatarUrl: (live && live.avatarUrl) || undefined,
+          decorationUrl: (live && live.decorationUrl) || undefined
         });
         const current = window.NashaAuth.getUser();
         if (current && current.uid === uid) {
           window.NashaAuth.updateProfile({ name: newName, discordId: newDiscordId });
         }
-      } else {
-        await window.NashaDB.saveStaffMember({ id, name: newName, discordId: newDiscordId });
       }
+
+      if (id.startsWith("st-") || /^\d{17,20}$/.test(newDiscordId)) {
+        await window.NashaDB.saveStaffMember({
+          id: id.startsWith("st-") ? id : `st-${newDiscordId}`,
+          uid: uid || "",
+          name: newName,
+          discordId: newDiscordId,
+          discordHandle: live ? `@${live.username}` : undefined,
+          avatarUrl: (live && live.avatarUrl) || undefined,
+          decorationUrl: (live && live.decorationUrl) || undefined,
+          lockCustomName: true
+        });
+      }
+
       loadFounderData();
-      if (window.showToast) window.showToast(`Updated staff display name to "${newName}"`);
+      if (window.showToast) window.showToast(`Updated staff "${newName}"`);
+    }
+
+    async function deleteStaffEntry(id) {
+      await window.NashaDB.deleteStaffMember(id);
+      loadFounderData();
     }
 
     async function removeAnnouncement(id) {
@@ -390,6 +466,31 @@
       await window.NashaDB.removeRoleAssignment(email);
       loadFounderData();
     }
+
+    document.getElementById("preRegisterStaffForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const discordId = document.getElementById("preDiscordId").value.trim();
+      const rank = document.getElementById("preRank").value;
+      const claimKey = "NSH-" + Math.random().toString(36).substring(2, 6).toUpperCase() + "-" + Math.random().toString(36).substring(2, 5).toUpperCase();
+
+      const live = await window.fetchLiveDiscordUser(discordId);
+      await window.NashaDB.saveStaffMember({
+        id: "st-" + discordId,
+        discordId,
+        rank,
+        name: (live && live.globalName) || `Staff (${discordId.slice(-4)})`,
+        discordHandle: live ? `@${live.username}` : "",
+        avatarUrl: (live && live.avatarUrl) || "",
+        decorationUrl: (live && live.decorationUrl) || "",
+        claimKey,
+        claimedByEmail: "",
+        lockCustomName: false
+      });
+
+      e.target.reset();
+      loadFounderData();
+      if (window.showToast) window.showToast(`Added Discord ID ${discordId} • Claim Key: ${claimKey}`);
+    });
 
     document.getElementById("createAnnouncementForm").addEventListener("submit", async (e) => {
       e.preventDefault();
