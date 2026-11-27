@@ -1,5 +1,5 @@
 /**
- * 🍁.Nʌsʜʌ™.🍁 — Individual User Auth, Dynamic Rank Enforcement & Live Profile Sync
+ * 🍁.Nʌsʜʌ™.🍁 — Individual User Auth, Dynamic Rank Enforcement & Discord Profile Protection
  * Ranks: founder, owner, admin, moderator, staff, member
  */
 
@@ -47,7 +47,15 @@ window.NashaAuth = (function () {
   function saveUserProfileToMap(userObj) {
     if (!userObj || !userObj.uid) return;
     const map = loadProfilesMap();
-    map[userObj.uid] = { ...userObj, role: computeRoleFromConfig(userObj.email) };
+    const existing = map[userObj.uid] || {};
+    map[userObj.uid] = {
+      ...existing,
+      ...userObj,
+      name: (existing && existing.name) || userObj.name,
+      avatarUrl: (existing && existing.avatarUrl) || userObj.avatarUrl || "",
+      decorationUrl: (existing && existing.decorationUrl) || userObj.decorationUrl || "",
+      role: computeRoleFromConfig(userObj.email || existing.email)
+    };
     localStorage.setItem(PROFILES_KEY, JSON.stringify(map));
   }
 
@@ -69,8 +77,10 @@ window.NashaAuth = (function () {
       email: cleanEmail,
       discordId: (existing && existing.discordId) || "",
       discordHandle: (existing && existing.discordHandle) || "",
+      avatarUrl: (existing && existing.avatarUrl) || "",
+      decorationUrl: (existing && existing.decorationUrl) || "",
       hexColor: (existing && existing.hexColor) || "#38bdf8",
-      photoURL: photoURL || (existing && existing.photoURL) || "",
+      photoURL: (existing && existing.photoURL) || photoURL || "",
       provider: provider || (existing && existing.provider) || "google",
       role: enforcedRole
     };
@@ -89,11 +99,13 @@ window.NashaAuth = (function () {
       if (parsed && parsed.email) {
         const freshRole = computeRoleFromConfig(parsed.email);
         const latestProfile = getSavedProfile(parsed.uid);
-        if (latestProfile && latestProfile.name) {
-          parsed.name = latestProfile.name;
-          parsed.discordId = latestProfile.discordId ?? parsed.discordId ?? "";
-          parsed.discordHandle = latestProfile.discordHandle ?? parsed.discordHandle ?? "";
-          parsed.hexColor = latestProfile.hexColor ?? parsed.hexColor ?? "#38bdf8";
+        if (latestProfile) {
+          if (latestProfile.name) parsed.name = latestProfile.name;
+          if (latestProfile.discordId !== undefined) parsed.discordId = latestProfile.discordId;
+          if (latestProfile.discordHandle !== undefined) parsed.discordHandle = latestProfile.discordHandle;
+          if (latestProfile.avatarUrl !== undefined) parsed.avatarUrl = latestProfile.avatarUrl;
+          if (latestProfile.decorationUrl !== undefined) parsed.decorationUrl = latestProfile.decorationUrl;
+          if (latestProfile.hexColor !== undefined) parsed.hexColor = latestProfile.hexColor;
         }
         if (parsed.role !== freshRole) {
           parsed.role = freshRole;
@@ -127,7 +139,12 @@ window.NashaAuth = (function () {
     if (!user) return null;
     const updated = { ...user, ...updates };
     updated.role = computeRoleFromConfig(updated.email);
-    setSession(updated);
+    const map = loadProfilesMap();
+    map[updated.uid] = { ...(map[updated.uid] || {}), ...updated };
+    localStorage.setItem(PROFILES_KEY, JSON.stringify(map));
+    currentUser = updated;
+    localStorage.setItem(SESSION_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent("nasha:auth-changed", { detail: { user: currentUser } }));
     if (window.NashaDB && window.NashaDB.saveUserProfile) {
       window.NashaDB.saveUserProfile(updated).catch(() => {});
     }
@@ -342,7 +359,7 @@ window.NashaAuth = (function () {
           uid: u.uid,
           name: (cloudProfile && cloudProfile.name) || u.displayName || (u.email ? u.email.split("@")[0] : "Google User"),
           email: u.email || "",
-          photoURL: u.photoURL || "",
+          photoURL: (cloudProfile && cloudProfile.photoURL) || u.photoURL || "",
           provider: "google"
         });
         setSession(userObj);
@@ -379,7 +396,7 @@ window.NashaAuth = (function () {
             uid: cred.user.uid,
             name: (cloudProfile && cloudProfile.name) || cred.user.displayName || displayName,
             email: cred.user.email || email,
-            photoURL: cred.user.photoURL || "",
+            photoURL: (cloudProfile && cloudProfile.photoURL) || cred.user.photoURL || "",
             provider: "email"
           });
           setSession(userObj);
@@ -491,7 +508,7 @@ window.NashaAuth = (function () {
             uid: user.uid,
             name: (cloudProfile && cloudProfile.name) || user.displayName || (user.email ? user.email.split("@")[0] : "Member"),
             email: user.email || "",
-            photoURL: user.photoURL || "",
+            photoURL: (cloudProfile && cloudProfile.photoURL) || user.photoURL || "",
             provider: (user.providerData && user.providerData[0] && user.providerData[0].providerId) || "firebase"
           });
           setSession(userObj);
