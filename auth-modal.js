@@ -1,22 +1,37 @@
 /**
- * 🍁.Nʌsʜʌ™.🍁 — Individual User Auth & Live Role Enforcement
- * Always computes role from window.NASHA_CONFIG.founderEmails / adminEmails on every read.
+ * 🍁.Nʌsʜʌ™.🍁 — Individual User Auth, Dynamic Rank Enforcement & Live Profile Sync
+ * Ranks: founder, owner, admin, moderator, staff, member
  */
 
 window.NashaAuth = (function () {
-  const SESSION_KEY = "nasha_active_session_v5";
-  const PROFILES_KEY = "nasha_profiles_by_uid_v5";
+  const SESSION_KEY = "nasha_active_session_v10";
+  const PROFILES_KEY = "nasha_profiles_by_uid_v10";
+  const PANEL_RANKS = ["founder", "owner", "admin", "moderator", "staff"];
   let currentUser = null;
 
   function computeRoleFromConfig(email) {
     const clean = String(email || "").trim().toLowerCase();
     if (!clean) return "member";
-    const cfg = window.NASHA_CONFIG || {};
-    const founders = (cfg.founderEmails || []).map((e) => String(e).trim().toLowerCase());
-    const admins = (cfg.adminEmails || []).map((e) => String(e).trim().toLowerCase());
 
-    if (founders.includes(clean)) return "founder";
-    if (admins.includes(clean)) return "admin";
+    try {
+      const rawAssignments = localStorage.getItem("nasha_role_assignments_v10");
+      if (rawAssignments) {
+        const list = JSON.parse(rawAssignments);
+        const found = list.find((item) => String(item.email || "").trim().toLowerCase() === clean);
+        if (found && found.role) {
+          return String(found.role).trim().toLowerCase();
+        }
+      }
+    } catch (e) {}
+
+    const cfg = window.NASHA_CONFIG || {};
+    const match = (list) => (list || []).map((e) => String(e).trim().toLowerCase()).includes(clean);
+
+    if (match(cfg.founderEmails)) return "founder";
+    if (match(cfg.ownerEmails)) return "owner";
+    if (match(cfg.adminEmails)) return "admin";
+    if (match(cfg.moderatorEmails)) return "moderator";
+    if (match(cfg.staffEmails)) return "staff";
     return "member";
   }
 
@@ -73,11 +88,18 @@ window.NashaAuth = (function () {
       const parsed = raw ? JSON.parse(raw) : null;
       if (parsed && parsed.email) {
         const freshRole = computeRoleFromConfig(parsed.email);
+        const latestProfile = getSavedProfile(parsed.uid);
+        if (latestProfile && latestProfile.name) {
+          parsed.name = latestProfile.name;
+          parsed.discordId = latestProfile.discordId ?? parsed.discordId ?? "";
+          parsed.discordHandle = latestProfile.discordHandle ?? parsed.discordHandle ?? "";
+          parsed.hexColor = latestProfile.hexColor ?? parsed.hexColor ?? "#38bdf8";
+        }
         if (parsed.role !== freshRole) {
           parsed.role = freshRole;
-          localStorage.setItem(SESSION_KEY, JSON.stringify(parsed));
-          saveUserProfileToMap(parsed);
         }
+        localStorage.setItem(SESSION_KEY, JSON.stringify(parsed));
+        saveUserProfileToMap(parsed);
       }
       currentUser = parsed;
     } catch (e) {
@@ -124,8 +146,8 @@ window.NashaAuth = (function () {
     const user = getUser();
     if (!user) return false;
     const role = computeRoleFromConfig(user.email);
-    if (requiredRole === "founder") return role === "founder";
-    if (requiredRole === "admin") return role === "founder" || role === "admin";
+    if (requiredRole === "founder") return role === "founder" || role === "owner";
+    if (requiredRole === "admin") return PANEL_RANKS.includes(role);
     return true;
   }
 
@@ -318,7 +340,7 @@ window.NashaAuth = (function () {
 
         const userObj = buildIndividualUser({
           uid: u.uid,
-          name: u.displayName || (u.email ? u.email.split("@")[0] : "Google User"),
+          name: (cloudProfile && cloudProfile.name) || u.displayName || (u.email ? u.email.split("@")[0] : "Google User"),
           email: u.email || "",
           photoURL: u.photoURL || "",
           provider: "google"
@@ -355,7 +377,7 @@ window.NashaAuth = (function () {
 
           const userObj = buildIndividualUser({
             uid: cred.user.uid,
-            name: cred.user.displayName || displayName,
+            name: (cloudProfile && cloudProfile.name) || cred.user.displayName || displayName,
             email: cred.user.email || email,
             photoURL: cred.user.photoURL || "",
             provider: "email"
@@ -467,7 +489,7 @@ window.NashaAuth = (function () {
 
           const userObj = buildIndividualUser({
             uid: user.uid,
-            name: user.displayName || (user.email ? user.email.split("@")[0] : "Member"),
+            name: (cloudProfile && cloudProfile.name) || user.displayName || (user.email ? user.email.split("@")[0] : "Member"),
             email: user.email || "",
             photoURL: user.photoURL || "",
             provider: (user.providerData && user.providerData[0] && user.providerData[0].providerId) || "firebase"
