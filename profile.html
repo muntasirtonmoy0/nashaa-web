@@ -19,7 +19,7 @@
           <span class="section-kicker">👤 MEMBER &amp; STAFF PROFILE HUB</span>
           <h1 class="section-title">Your 🍁.Nʌsʜʌ™.🍁 Identity &amp; Discord Link</h1>
           <p style="color:var(--text-muted);">
-            Sign in with Google or Email, customize your #HEX profile glow, and link your Discord Snowflake ID.
+            Sign in with Google or Email, customize your #HEX profile glow, or bind a Staff Claim Key.
           </p>
         </div>
 
@@ -42,23 +42,37 @@
         <div id="profileLoggedInView" style="display:none;">
           <div class="grid-2">
             <!-- Profile Identity Card -->
-            <div class="glass-card" id="profileHeroCard">
-              <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;">
-                <div id="profAvatarBig" style="width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.65rem;font-weight:800;background:#38bdf8;color:#030712;box-shadow:0 0 24px rgba(56,189,248,0.5);">
-                  M
+            <div style="display:flex;flex-direction:column;gap:1.5rem;">
+              <div class="glass-card" id="profileHeroCard">
+                <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;">
+                  <div id="profAvatarBig" style="width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.65rem;font-weight:800;background:#38bdf8;color:#030712;box-shadow:0 0 24px rgba(56,189,248,0.5);">
+                    M
+                  </div>
+                  <div>
+                    <h2 id="profDisplayName" style="margin:0;">Member</h2>
+                    <div id="profEmail" style="color:var(--text-muted);font-size:0.88rem;">user@example.com</div>
+                    <span class="channel-tag" id="profRoleBadge" style="margin-top:0.35rem;">CLEARANCE: MEMBER</span>
+                  </div>
                 </div>
-                <div>
-                  <h2 id="profDisplayName" style="margin:0;">Member</h2>
-                  <div id="profEmail" style="color:var(--text-muted);font-size:0.88rem;">user@example.com</div>
-                  <span class="channel-tag" id="profRoleBadge" style="margin-top:0.35rem;">CLEARANCE: MEMBER</span>
+
+                <div style="display:flex;flex-wrap:wrap;gap:0.65rem;margin-top:1.25rem;">
+                  <a href="events-giveaway.html" class="nasha-btn-secondary">🎁 Browse #GVWY</a>
+                  <a href="admin.html" id="profAdminLink" class="nasha-btn-primary" style="display:none;">🛡️ Open Admin &amp; Founder Panel</a>
+                  <button type="button" class="nasha-btn-ghost-sm" onclick="window.NashaAuth.signOut()">Sign Out</button>
                 </div>
               </div>
 
-              <div style="display:flex;flex-wrap:wrap;gap:0.65rem;margin-top:1.25rem;">
-                <a href="events-giveaway.html" class="nasha-btn-secondary">🎁 Browse #GVWY</a>
-                <!-- Visible ONLY to authorized Admin & Founder emails -->
-                <a href="admin-panel.html" id="profAdminLink" class="nasha-btn-primary" style="display:none;">🛡️ Open Admin Panel</a>
-                <button type="button" class="nasha-btn-ghost-sm" onclick="window.NashaAuth.signOut()">Sign Out</button>
+              <!-- Staff Claim Key Binding Card -->
+              <div class="glass-card" style="border-color:rgba(251,191,36,0.35);">
+                <span class="channel-tag" style="color:#fde68a;border-color:rgba(251,191,36,0.4);">🔑 STAFF CLAIM KEY</span>
+                <h3 style="margin:0.65rem 0 0.4rem;">Bind Your Account to a Pre-Registered Discord ID</h3>
+                <p style="color:var(--text-muted);font-size:0.84rem;margin:0 0 0.85rem;">
+                  Received a Claim Key from the Founder? Enter it below to bind your Discord profile, live PFP, avatar decoration, and staff rank.
+                </p>
+                <form id="claimStaffKeyForm" style="display:flex;gap:0.65rem;flex-wrap:wrap;">
+                  <input class="nasha-input" id="staffClaimKeyInput" placeholder="e.g. NSH-8492-K7" style="flex:1;min-width:190px;text-transform:uppercase;" required />
+                  <button type="submit" class="nasha-btn-primary">Bind Discord ID</button>
+                </form>
               </div>
             </div>
 
@@ -122,12 +136,11 @@
       avatar.style.background = hex;
       avatar.style.boxShadow = `0 0 26px ${hex}`;
 
-      const roleDisplay = user.role === "founder" ? "OWNER / FOUNDER" : (user.role || "member").toUpperCase();
+      const roleDisplay = (user.role || "member").toUpperCase();
       document.getElementById("profDisplayName").textContent = user.name;
       document.getElementById("profEmail").textContent = `${user.email} • Signed in via ${(user.provider || "email").toUpperCase()}`;
-      document.getElementById("profRoleBadge").textContent = `CLEARANCE: ${roleDisplay}`;
+      document.getElementById("profRoleBadge").textContent = `RANK: ${roleDisplay}`;
 
-      // Only show Admin Panel button if user's email is authorized as Admin or Founder
       document.getElementById("profAdminLink").style.display = window.NashaAuth.hasAccess("admin") ? "inline-flex" : "none";
 
       document.getElementById("editProfName").value = user.name || "";
@@ -136,16 +149,56 @@
       document.getElementById("editProfHex").value = hex;
     }
 
-    document.getElementById("profileUpdateForm").addEventListener("submit", (e) => {
+    document.getElementById("profileUpdateForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+      const discordId = document.getElementById("editProfDiscordId").value.trim();
+      const live = /^\d{17,20}$/.test(discordId) && window.fetchLiveDiscordUser
+        ? await window.fetchLiveDiscordUser(discordId)
+        : null;
+
       window.NashaAuth.updateProfile({
         name: document.getElementById("editProfName").value.trim(),
-        discordHandle: document.getElementById("editProfHandle").value.trim(),
-        discordId: document.getElementById("editProfDiscordId").value.trim(),
+        discordHandle: document.getElementById("editProfHandle").value.trim() || (live ? `@${live.username}` : ""),
+        discordId,
+        avatarUrl: (live && live.avatarUrl) || undefined,
+        decorationUrl: (live && live.decorationUrl) || undefined,
         hexColor: document.getElementById("editProfHex").value
       });
       renderProfilePage();
       if (window.showToast) window.showToast("Profile updated!");
+    });
+
+    document.getElementById("claimStaffKeyForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const user = window.NashaAuth.getUser();
+      if (!user) return;
+
+      const key = document.getElementById("staffClaimKeyInput").value.trim().toUpperCase();
+      const staffList = await window.NashaDB.getStaff();
+      const match = staffList.find((s) => String(s.claimKey || "").toUpperCase() === key && !s.claimedByEmail);
+
+      if (!match) {
+        if (window.showToast) window.showToast("Invalid or already claimed key.");
+        return;
+      }
+
+      await window.NashaDB.saveStaffMember({
+        ...match,
+        uid: user.uid,
+        email: user.email,
+        claimedByEmail: user.email
+      });
+      await window.NashaDB.assignRoleToEmail(user.email, match.rank || "staff");
+      window.NashaAuth.updateProfile({
+        discordId: match.discordId,
+        discordHandle: match.discordHandle || user.discordHandle,
+        avatarUrl: match.avatarUrl || user.avatarUrl,
+        decorationUrl: match.decorationUrl || user.decorationUrl
+      });
+
+      e.target.reset();
+      renderProfilePage();
+      if (window.showToast) window.showToast(`Bound to Discord ID ${match.discordId} (${match.rank})!`);
     });
 
     document.addEventListener("DOMContentLoaded", renderProfilePage);
