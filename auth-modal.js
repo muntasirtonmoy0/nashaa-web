@@ -1,6 +1,6 @@
 /**
- * 🍁.Nʌsʜʌ™.🍁 — Individual User Auth & Per-User Profile Store
- * Stores each Google/Email user's profile separately by uid/email so users never overwrite one another.
+ * 🍁.Nʌsʜʌ™.🍁 — Individual User Auth & Per-User Profile Controller
+ * Uses Firebase Compat Auth initialized from firebase-config.js (nashaa-717c9).
  */
 
 window.NashaAuth = (function () {
@@ -20,17 +20,7 @@ window.NashaAuth = (function () {
   function saveUserProfileToMap(userObj) {
     if (!userObj || !userObj.uid) return;
     const map = loadProfilesMap();
-    map[userObj.uid] = {
-      uid: userObj.uid,
-      name: userObj.name,
-      email: userObj.email,
-      discordId: userObj.discordId || "",
-      discordHandle: userObj.discordHandle || "",
-      hexColor: userObj.hexColor || "#38bdf8",
-      photoURL: userObj.photoURL || "",
-      provider: userObj.provider || "email",
-      role: userObj.role || "member"
-    };
+    map[userObj.uid] = { ...userObj };
     localStorage.setItem(PROFILES_KEY, JSON.stringify(map));
   }
 
@@ -44,12 +34,8 @@ window.NashaAuth = (function () {
     if (explicitRole) return explicitRole;
     const lower = (email || "").toLowerCase().trim();
     const cfg = window.NASHA_CONFIG || {};
-    if ((cfg.founderEmails || []).map((e) => e.toLowerCase()).includes(lower)) {
-      return "founder";
-    }
-    if ((cfg.adminEmails || []).map((e) => e.toLowerCase()).includes(lower)) {
-      return "admin";
-    }
+    if ((cfg.founderEmails || []).map((e) => e.toLowerCase()).includes(lower)) return "founder";
+    if ((cfg.adminEmails || []).map((e) => e.toLowerCase()).includes(lower)) return "admin";
     return "member";
   }
 
@@ -72,6 +58,9 @@ window.NashaAuth = (function () {
     };
 
     saveUserProfileToMap(merged);
+    if (window.NashaDB && window.NashaDB.saveUserProfile) {
+      window.NashaDB.saveUserProfile(merged).catch(() => {});
+    }
     return merged;
   }
 
@@ -101,6 +90,9 @@ window.NashaAuth = (function () {
     if (!user) return null;
     const updated = { ...user, ...updates };
     setSession(updated);
+    if (window.NashaDB && window.NashaDB.saveUserProfile) {
+      window.NashaDB.saveUserProfile(updated).catch(() => {});
+    }
     return updated;
   }
 
@@ -285,7 +277,7 @@ window.NashaAuth = (function () {
       showError("");
       const fbAuth = window.NashaDB && window.NashaDB.getAuth();
       if (!fbAuth || typeof firebase === "undefined") {
-        showError("Firebase Auth is not configured yet. Add your Firebase Web App keys in firebase-config.js and enable Google Sign-In in Firebase Console.");
+        showError("Firebase Auth failed to initialize. Check that Firebase compat SDK scripts are loaded and Google sign-in is enabled in Firebase Console.");
         return;
       }
       try {
@@ -293,6 +285,9 @@ window.NashaAuth = (function () {
         provider.setCustomParameters({ prompt: "select_account" });
         const res = await fbAuth.signInWithPopup(provider);
         const u = res.user;
+        const cloudProfile = window.NashaDB.fetchUserProfile ? await window.NashaDB.fetchUserProfile(u.uid).catch(() => null) : null;
+        if (cloudProfile) saveUserProfileToMap(cloudProfile);
+
         const userObj = buildIndividualUser({
           uid: u.uid,
           name: u.displayName || (u.email ? u.email.split("@")[0] : "Google User"),
@@ -324,6 +319,9 @@ window.NashaAuth = (function () {
           } else {
             cred = await fbAuth.signInWithEmailAndPassword(email, password);
           }
+          const cloudProfile = window.NashaDB.fetchUserProfile ? await window.NashaDB.fetchUserProfile(cred.user.uid).catch(() => null) : null;
+          if (cloudProfile) saveUserProfileToMap(cloudProfile);
+
           const userObj = buildIndividualUser({
             uid: cred.user.uid,
             name: cred.user.displayName || displayName,
@@ -337,7 +335,6 @@ window.NashaAuth = (function () {
           showError(err.message || "Email authentication failed.");
         }
       } else {
-        // Local per-user account fallback keyed by email
         const userObj = buildIndividualUser({
           uid: null,
           name: displayName,
@@ -363,9 +360,7 @@ window.NashaAuth = (function () {
     injectModalHTML();
     const modal = document.getElementById("nasha-auth-modal");
     const subEl = document.getElementById("nashaAuthSub");
-    if (subEl && customSubtitle) {
-      subEl.textContent = customSubtitle;
-    }
+    if (subEl && customSubtitle) subEl.textContent = customSubtitle;
     const targetTab = modal.querySelector(`[data-auth-tab="${defaultTab}"]`);
     if (targetTab) targetTab.click();
     modal.classList.add("open");
@@ -382,9 +377,7 @@ window.NashaAuth = (function () {
 
   function signOut() {
     const fbAuth = window.NashaDB && window.NashaDB.getAuth();
-    if (fbAuth) {
-      fbAuth.signOut().catch(() => {});
-    }
+    if (fbAuth) fbAuth.signOut().catch(() => {});
     setSession(null);
   }
 
@@ -437,8 +430,11 @@ window.NashaAuth = (function () {
     injectModalHTML();
     const fbAuth = window.NashaDB && window.NashaDB.getAuth();
     if (fbAuth) {
-      fbAuth.onAuthStateChanged((user) => {
+      fbAuth.onAuthStateChanged(async (user) => {
         if (user) {
+          const cloudProfile = window.NashaDB.fetchUserProfile ? await window.NashaDB.fetchUserProfile(user.uid).catch(() => null) : null;
+          if (cloudProfile) saveUserProfileToMap(cloudProfile);
+
           const userObj = buildIndividualUser({
             uid: user.uid,
             name: user.displayName || (user.email ? user.email.split("@")[0] : "Member"),
@@ -447,6 +443,8 @@ window.NashaAuth = (function () {
             provider: (user.providerData && user.providerData[0] && user.providerData[0].providerId) || "firebase"
           });
           setSession(userObj);
+        } else if (loadStoredSession()?.provider === "google" || loadStoredSession()?.provider === "firebase") {
+          setSession(null);
         }
       });
     }
