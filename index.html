@@ -39,7 +39,7 @@
     <section class="min-h-screen flex flex-col justify-center items-center px-4 sm:px-6 pt-28 pb-16 text-center">
       <div class="reveal-up mb-6 inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full glass-card border-cyan-400/30 text-xs sm:text-sm text-cyan-200">
         <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
-        <span id="home-annc-text">We now have <strong class="text-white">2,720+ Members</strong> • Boost Goal <strong class="text-cyan-300">15/36</strong>!</span>
+        <span id="home-annc-text">We now have <strong class="text-white">2,720+ Members</strong> • #GVWY Live!</span>
       </div>
 
       <div class="reveal-up delay-100 max-w-5xl mx-auto">
@@ -68,15 +68,11 @@
         </div>
       </div>
 
-      <!-- Live Counters (Synced with Discord & Firestore) -->
-      <div class="reveal-up delay-300 w-full max-w-5xl mx-auto mt-14 grid grid-cols-2 lg:grid-cols-4 gap-4 text-left">
+      <!-- Live Counters -->
+      <div class="reveal-up delay-300 w-full max-w-5xl mx-auto mt-14 grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
         <div class="glass-card rounded-2xl p-5">
           <p class="text-xs text-slate-400 mb-1">TOTAL MEMBERS</p>
           <p id="home-members-count" class="font-display text-3xl font-extrabold text-white">2,720</p>
-        </div>
-        <div class="glass-card rounded-2xl p-5">
-          <p class="text-xs text-slate-400 mb-1">BOOST GOAL</p>
-          <p id="home-boosts-count" class="font-display text-3xl font-extrabold text-cyan-300">15 / 36</p>
         </div>
         <div class="glass-card rounded-2xl p-5">
           <p class="text-xs text-slate-400 mb-1">SERVER TAG</p>
@@ -103,7 +99,7 @@
       </div>
     </div>
 
-    <!-- Quick Page Navigation Cards (Founder Admin Card Removed) -->
+    <!-- Quick Page Navigation Cards -->
     <section class="py-24 px-4 sm:px-6 max-w-7xl mx-auto">
       <div class="reveal-up text-center max-w-2xl mx-auto mb-12">
         <h3 class="font-display text-3xl sm:text-4xl font-extrabold text-white mb-3">
@@ -142,7 +138,7 @@
             <i class="fa-solid fa-scale-balanced"></i>
           </div>
           <h4 class="font-display font-bold text-xl text-white group-hover:text-cyan-300 transition">FAQ &amp; About Us (#LAW)</h4>
-          <p class="text-xs text-slate-400 mt-1.5">Learn about server channels, boost perks, voice creation, and community rules.</p>
+          <p class="text-xs text-slate-400 mt-1.5">Learn about server channels, voice creation, and community rules.</p>
         </a>
       </div>
     </section>
@@ -155,7 +151,6 @@
     function refreshHomeStats() {
       const s = window.NASHA_STORE.server;
       document.getElementById('home-members-count').textContent = Number(s.members).toLocaleString();
-      document.getElementById('home-boosts-count').textContent = `${s.boosts} / ${s.boostGoal}`;
       document.getElementById('home-annc-text').innerHTML = s.announcement;
     }
     document.addEventListener('DOMContentLoaded', refreshHomeStats);
