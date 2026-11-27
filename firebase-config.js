@@ -6,11 +6,9 @@
 window.NASHA_CONFIG = {
   serverName: "🍁.Nʌsʜʌ™.🍁",
   defaultMembers: 2720,
-  defaultBoosts: 15,
-  maxBoosts: 36,
-  // Optional: permanent invite code from https://discord.gg/YOUR_CODE for bot-free member count sync
-  inviteCode: "https://discord.gg/nasha",
-  // Optional: 18-19 digit Discord server ID if Server Widget is enabled for online count
+  // Permanent invite code only (for https://discord.gg/nasha, use "nasha")
+  inviteCode: "nasha",
+  // 18-19 digit Discord server ID if Server Widget is enabled for online count
   guildId: "1367356170347479040",
   discordInvite: "https://discord.gg/nasha",
   founderEmails: ["muntasirtonmoy10@gmail.com"],
@@ -28,19 +26,17 @@ window.NASHA_CONFIG = {
 
 window.NashaDB = (function () {
   const STORAGE_KEYS = {
-    STATS: "nasha_live_stats_v6",
-    EVENTS: "nasha_events_giveaways_v6",
-    STAFF: "nasha_staff_roster_v6",
-    SETTINGS: "nasha_founder_settings_v6"
+    STATS: "nasha_live_stats_v7",
+    EVENTS: "nasha_events_giveaways_v7",
+    STAFF: "nasha_staff_roster_v7",
+    SETTINGS: "nasha_founder_settings_v7"
   };
 
   const DEFAULT_DATA = {
     stats: {
       members: 2720,
       online: null,
-      boosts: 15,
-      maxBoosts: 36,
-      announcement: "We now have <strong class='text-white'>2,720+ Members</strong> • Boost Goal <strong class='text-cyan-300'>15/36</strong> • #GVWY Live!"
+      announcement: "We now have <strong class='text-white'>2,720+ Members</strong> • #GVWY Live!"
     },
     settings: {
       maintenanceMode: false,
@@ -101,8 +97,6 @@ window.NashaDB = (function () {
         name: window.NASHA_CONFIG.serverName,
         members: stats.members,
         online: stats.online,
-        boosts: stats.boosts,
-        boostGoal: stats.maxBoosts || 36,
         announcement: stats.announcement,
         inviteUrl: window.NASHA_CONFIG.discordInvite
       },
@@ -266,8 +260,10 @@ window.NashaDB = (function () {
 
 // Bot-free live member count sync via Discord's public Invite API
 window.syncDiscordNoBot = async function () {
-  const code = window.NASHA_CONFIG && window.NASHA_CONFIG.inviteCode;
-  if (!code || code === "YOUR_PERMANENT_INVITE_CODE") return;
+  const rawCode = window.NASHA_CONFIG && window.NASHA_CONFIG.inviteCode;
+  if (!rawCode || rawCode === "YOUR_PERMANENT_INVITE_CODE") return;
+  const code = String(rawCode).replace(/^https?:\/\/discord\.gg\//i, "").trim();
+  if (!code) return;
 
   try {
     const res = await fetch(`https://discord.com/api/v10/invites/${encodeURIComponent(code)}?with_counts=true`);
@@ -275,14 +271,10 @@ window.syncDiscordNoBot = async function () {
     const data = await res.json();
 
     if (typeof data.approximate_member_count === "number") {
-      const current = await window.NashaDB.getStats();
       const liveMembers = data.approximate_member_count;
-      const boosts = current.boosts ?? window.NASHA_CONFIG.defaultBoosts;
-      const maxBoosts = current.maxBoosts || 36;
-
       await window.NashaDB.updateStats({
         members: liveMembers,
-        announcement: `We now have <strong class='text-white'>${liveMembers.toLocaleString()}+ Members</strong> • Boost Goal <strong class='text-cyan-300'>${boosts}/${maxBoosts}</strong> • #GVWY Live!`
+        announcement: `We now have <strong class='text-white'>${liveMembers.toLocaleString()}+ Members</strong> • #GVWY Live!`
       });
     }
   } catch (err) {
