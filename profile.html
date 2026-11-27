@@ -19,7 +19,7 @@
           <span class="section-kicker">👤 MEMBER &amp; STAFF PROFILE HUB</span>
           <h1 class="section-title">Your 🍁.Nʌsʜʌ™.🍁 Identity &amp; Discord Link</h1>
           <p style="color:var(--text-muted);">
-            Sign in with Google or Email, customize your #HEX profile glow, or bind a Staff Claim Key.
+            Sign in with Google or Email, customize your profile glow, or bind a Staff Claim Key.
           </p>
         </div>
 
@@ -30,7 +30,7 @@
           </div>
           <h2 style="margin:0 0 0.5rem;">Welcome to 🍁.Nʌsʜʌ™.🍁</h2>
           <p style="color:var(--text-muted);margin:0 0 1.5rem;">
-            Sign in with your own Google or Email account to manage your profile and enter #GVWY giveaways.
+            Sign in with your own Google or Email account to manage your profile and enter giveaways.
           </p>
           <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
             <button type="button" class="nasha-btn-primary" onclick="window.NashaAuth.openModal('login')">Sign In / Google Login</button>
@@ -51,13 +51,13 @@
                   <div>
                     <h2 id="profDisplayName" style="margin:0;">Member</h2>
                     <div id="profEmail" style="color:var(--text-muted);font-size:0.88rem;">user@example.com</div>
-                    <span class="channel-tag" id="profRoleBadge" style="margin-top:0.35rem;">CLEARANCE: MEMBER</span>
+                    <span class="channel-tag" id="profRoleBadge" style="margin-top:0.35rem;">RANK: MEMBER</span>
                   </div>
                 </div>
 
                 <div style="display:flex;flex-wrap:wrap;gap:0.65rem;margin-top:1.25rem;">
-                  <a href="events-giveaway.html" class="nasha-btn-secondary">🎁 Browse #GVWY</a>
-                  <a href="admin.html" id="profAdminLink" class="nasha-btn-primary" style="display:none;">🛡️ Open Admin &amp; Founder Panel</a>
+                  <a href="/events-giveaway" class="nasha-btn-secondary">🎁 Browse Giveaways</a>
+                  <a href="/admin" id="profAdminLink" class="nasha-btn-primary" style="display:none;">🛡️ Open Admin &amp; Founder Panel</a>
                   <button type="button" class="nasha-btn-ghost-sm" onclick="window.NashaAuth.signOut()">Sign Out</button>
                 </div>
               </div>
@@ -76,9 +76,9 @@
               </div>
             </div>
 
-            <!-- Edit Discord Sync & #HEX Role Color -->
+            <!-- Edit Discord Sync & Profile Glow Color -->
             <div class="glass-card">
-              <span class="channel-tag">#HEX • #TAG • DISCORD SYNC</span>
+              <span class="channel-tag">CUSTOM GLOW • TAG 💎 ඞINE • DISCORD SYNC</span>
               <h3 style="margin:0.75rem 0 1rem;">Customize Profile &amp; Link Discord</h3>
               <form id="profileUpdateForm" style="display:flex;flex-direction:column;gap:0.85rem;">
                 <div>
@@ -96,7 +96,7 @@
                   </div>
                 </div>
                 <div>
-                  <label class="nasha-label">Preferred #HEX Glow Color</label>
+                  <label class="nasha-label">Preferred Glow Color</label>
                   <input class="nasha-input" type="color" id="editProfHex" value="#38bdf8" style="height:44px;padding:4px;" />
                 </div>
                 <button type="submit" class="nasha-btn-primary">Save Profile Settings</button>
