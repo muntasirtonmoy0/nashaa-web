@@ -1,5 +1,5 @@
 /**
- * 🍁.Nʌsʜʌ™.🍁 — Complete Firebase Config (nashaa-717c9), Live Staff Profiles, Role Assignments & Activity Logs
+ * 🍁.Nʌsʜʌ™.🍁 — Complete Firebase Config (nashaa-717c9), Live Discord PFP/Deco Sync, Claim Keys & Activity Logs
  * Load BEFORE auth-modal.js and navbar.js on every HTML page.
  */
 
@@ -31,7 +31,7 @@ window.ROLE_PERMISSIONS = {
     perms: [
       "Full access to Admin Panel & Founder Panel",
       "Assign or remove email ranks (founder, owner, admin, moderator, staff, member)",
-      "Edit display names, ranks, and Discord IDs for all logged-in staff",
+      "Pre-register staff Discord IDs, generate Claim Keys, and edit display names",
       "View all staff activity logs",
       "Publish & delete announcements, giveaways/events, and update live server stats"
     ]
@@ -40,7 +40,7 @@ window.ROLE_PERMISSIONS = {
     label: "Owner",
     perms: [
       "Full access to Admin Panel & Founder Panel",
-      "Assign or remove email ranks and edit logged-in staff display names",
+      "Assign or remove email ranks, generate Claim Keys, and edit staff display names",
       "View all staff activity logs",
       "Publish & delete announcements, giveaways/events, and update live server stats"
     ]
@@ -179,7 +179,7 @@ window.NashaDB = (function () {
 
     const byKey = new Map();
 
-    // 1. Add all logged-in users who hold a staff/founder/owner/admin/moderator rank
+    // 1. Add logged-in users who hold a staff/founder/owner/admin/moderator rank
     profiles.forEach((p) => {
       const cleanEmail = String(p.email || "").trim().toLowerCase();
       const assigned = assignments.find((a) => String(a.email || "").toLowerCase() === cleanEmail);
@@ -192,7 +192,8 @@ window.NashaDB = (function () {
           (p.discordHandle && String(wm.username || "").toLowerCase() === String(p.discordHandle).replace(/^@/, "").toLowerCase())
       );
 
-      byKey.set(p.uid || cleanEmail, {
+      const mapKey = (p.discordId && /^\d{17,20}$/.test(String(p.discordId))) ? String(p.discordId) : (p.uid || cleanEmail);
+      byKey.set(mapKey, {
         id: p.uid || cleanEmail,
         uid: p.uid || "",
         email: cleanEmail,
@@ -200,7 +201,8 @@ window.NashaDB = (function () {
         rank: effectiveRank,
         discordId: p.discordId || "Not Linked",
         discordHandle: p.discordHandle || "",
-        photoURL: p.photoURL || "",
+        avatarUrl: p.avatarUrl || p.photoURL || "",
+        decorationUrl: p.decorationUrl || "",
         hexColor: p.hexColor || "#38bdf8",
         onlineInDiscord: isOnlineInWidget,
         role: `${effectiveRank.charAt(0).toUpperCase() + effectiveRank.slice(1)} • Verified Account`,
@@ -209,21 +211,27 @@ window.NashaDB = (function () {
       });
     });
 
-    // 2. Merge any manual staff entries added in Founder Panel
+    // 2. Merge pre-registered / manual staff entries (including Claim Key entries)
     manualStaff.forEach((st) => {
       const rank = normalizeRank(st.rank || st.roleRank || st.role);
-      const key = st.uid || st.email || st.discordId || st.id;
-      const existing = byKey.get(key);
+      const mapKey = (st.discordId && /^\d{17,20}$/.test(String(st.discordId)))
+        ? String(st.discordId)
+        : (st.uid || st.email || st.id);
+      const existing = byKey.get(mapKey);
       const isOnlineInWidget = widgetOnline.some((wm) => st.discordId && String(wm.id) === String(st.discordId));
 
-      byKey.set(key, {
+      byKey.set(mapKey, {
         ...(existing || {}),
         ...st,
-        id: st.id || key,
+        id: st.id || mapKey,
+        uid: st.uid || (existing && existing.uid) || "",
+        email: st.claimedByEmail || st.email || (existing && existing.email) || "",
         name: st.name || (existing && existing.name) || "Staff",
         rank,
         discordId: st.discordId || (existing && existing.discordId) || "Not Linked",
         discordHandle: st.discordHandle || (existing && existing.discordHandle) || "",
+        avatarUrl: st.avatarUrl || (existing && existing.avatarUrl) || "",
+        decorationUrl: st.decorationUrl || (existing && existing.decorationUrl) || "",
         onlineInDiscord: isOnlineInWidget || Boolean(existing && existing.onlineInDiscord),
         role: st.bio || st.role || `${rank.charAt(0).toUpperCase() + rank.slice(1)}`,
         badgeColor: getBadgeColor(rank)
@@ -374,7 +382,6 @@ window.NashaDB = (function () {
     else current.push(entry);
     writeLocal(STORAGE_KEYS.ROLE_ASSIGNMENTS, current);
 
-    // Also update matching logged-in user_profiles entry if one exists
     const profiles = await getAllUserProfiles();
     const matchedProfile = profiles.find((p) => String(p.email || "").toLowerCase() === cleanEmail);
     if (matchedProfile && matchedProfile.uid) {
@@ -519,17 +526,23 @@ window.NashaDB = (function () {
     return buildCombinedStaffDirectory();
   }
 
-  async function saveStaffMember(member) {
+  async function saveStaffMember(member, skipLog = false) {
     const current = readLocal(STORAGE_KEYS.STAFF, DEFAULT_DATA.staff);
     const idx = current.findIndex((s) => s.id === member.id || (member.discordId && s.discordId === member.discordId));
-    const entry = { id: member.id || "st-" + Date.now(), ...member, rank: normalizeRank(member.rank) };
+    const entry = {
+      id: member.id || (member.discordId ? "st-" + member.discordId : "st-" + Date.now()),
+      ...member,
+      rank: normalizeRank(member.rank)
+    };
     if (idx >= 0) current[idx] = { ...current[idx], ...entry };
     else current.push(entry);
     writeLocal(STORAGE_KEYS.STAFF, current);
     if (firestoreInstance && firebaseAuthInstance && firebaseAuthInstance.currentUser) {
       await firestoreInstance.collection("staff_members").doc(entry.id).set(entry, { merge: true }).catch(() => {});
     }
-    await logActivity(`Synced staff ${entry.name} (${entry.rank})`, "staff");
+    if (!skipLog) {
+      await logActivity(`Synced staff ${entry.name} (${entry.rank})`, "staff");
+    }
     return entry;
   }
 
@@ -573,6 +586,51 @@ window.NashaDB = (function () {
     getActivity
   };
 })();
+
+// Live Discord PFP, Avatar Decoration, Display Name & Username sync via /api/discord-user
+window.fetchLiveDiscordUser = async function (discordId) {
+  if (!discordId || !/^\d{17,20}$/.test(String(discordId))) return null;
+  try {
+    const res = await fetch(`/api/discord-user?id=${encodeURIComponent(discordId)}`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    return null;
+  }
+};
+
+window.refreshAllStaffDiscordProfiles = async function () {
+  if (!window.NashaDB) return;
+  const staffList = await window.NashaDB.getStaff();
+  for (const st of staffList) {
+    if (!st.discordId || !/^\d{17,20}$/.test(String(st.discordId))) continue;
+    const live = await window.fetchLiveDiscordUser(st.discordId);
+    if (!live) continue;
+
+    const nextName = st.lockCustomName ? st.name : (live.globalName || st.name);
+    const nextHandle = live.username ? `@${live.username}` : st.discordHandle;
+    const changed =
+      st.avatarUrl !== live.avatarUrl ||
+      st.decorationUrl !== live.decorationUrl ||
+      st.discordHandle !== nextHandle ||
+      st.name !== nextName;
+
+    if (changed) {
+      await window.NashaDB.saveStaffMember(
+        {
+          ...st,
+          id: st.id && st.id.startsWith("st-") ? st.id : `st-${st.discordId}`,
+          name: nextName,
+          discordHandle: nextHandle,
+          avatarUrl: live.avatarUrl,
+          decorationUrl: live.decorationUrl || "",
+          lastDiscordSync: new Date().toISOString()
+        },
+        true
+      );
+    }
+  }
+};
 
 window.syncDiscordNoBot = async function () {
   const settings = await window.NashaDB.getSettings();
@@ -632,6 +690,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.NashaDB.initFirebase();
   window.syncDiscordNoBot();
   window.syncDiscordWidgetOnline();
+  window.refreshAllStaffDiscordProfiles();
   setInterval(() => {
     window.syncDiscordNoBot();
     window.syncDiscordWidgetOnline();
