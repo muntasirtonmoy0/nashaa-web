@@ -260,6 +260,9 @@ window.NashaDB = (function () {
 
 // Bot-free live member count sync via Discord's public Invite API
 window.syncDiscordNoBot = async function () {
+  const settings = await window.NashaDB.getSettings();
+  if (settings && settings.autoSyncInvite === false) return;
+
   const rawCode = window.NASHA_CONFIG && window.NASHA_CONFIG.inviteCode;
   if (!rawCode || rawCode === "YOUR_PERMANENT_INVITE_CODE") return;
   const code = String(rawCode).replace(/^https?:\/\/discord\.gg\//i, "").trim();
@@ -284,6 +287,9 @@ window.syncDiscordNoBot = async function () {
 
 // Optional bot-free online count via Discord's Server Widget JSON (requires Widget enabled in Discord)
 window.syncDiscordWidgetOnline = async function () {
+  const settings = await window.NashaDB.getSettings();
+  if (settings && settings.autoSyncInvite === false) return null;
+
   const guildId = window.NASHA_CONFIG && window.NASHA_CONFIG.guildId;
   if (!guildId || guildId === "YOUR_GUILD_ID") return null;
 
