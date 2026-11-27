@@ -52,7 +52,7 @@ window.NashaNavbar = (function () {
   const NAV_LINKS = [
     { href: "index.html", label: "Home" },
     { href: "announcement.html", label: "Announcements" },
-    { href: "events-giveaway.html", label: "Events & #GVWY" },
+    { href: "events-giveaway.html", label: "Events & Giveaways" },
     { href: "gallery.html", label: "Gallery" },
     { href: "staff-info.html", label: "Staff Info" },
     { href: "FAQ-about.html", label: "About & FAQ" }
