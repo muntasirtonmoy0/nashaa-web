@@ -8,6 +8,64 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <style>
+    .prof-avatar-stage {
+      position: relative;
+      width: 84px;
+      height: 84px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .prof-avatar-core {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.65rem;
+      font-weight: 800;
+      overflow: hidden;
+      background: #38bdf8;
+      color: #030712;
+      box-shadow: 0 0 24px rgba(56, 189, 248, 0.5);
+    }
+    .prof-avatar-core img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+    }
+    .prof-avatar-deco {
+      position: absolute;
+      inset: 0;
+      width: 84px;
+      height: 84px;
+      object-fit: contain;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .prof-discord-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      margin-top: 0.45rem;
+      padding: 0.3rem 0.65rem;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: #bae6fd;
+      font-size: 0.78rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      cursor: pointer;
+    }
+    .prof-discord-chip:hover {
+      background: rgba(56, 189, 248, 0.22);
+    }
+  </style>
 </head>
 <body>
   <div id="nasha-navbar-root"></div>
@@ -19,7 +77,7 @@
           <span class="section-kicker">👤 MEMBER &amp; STAFF PROFILE HUB</span>
           <h1 class="section-title">Your 🍁.Nʌsʜʌ™.🍁 Identity &amp; Discord Link</h1>
           <p style="color:var(--text-muted);">
-            Sign in with Google or Email, customize your profile glow, or bind a Staff Claim Key.
+            Sign in with Google or Email, link your Discord ID to preview your live Discord PFP &amp; avatar decoration, or bind a Staff Claim Key.
           </p>
         </div>
 
@@ -44,18 +102,22 @@
             <!-- Profile Identity Card -->
             <div style="display:flex;flex-direction:column;gap:1.5rem;">
               <div class="glass-card" id="profileHeroCard">
-                <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;">
-                  <div id="profAvatarBig" style="width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.65rem;font-weight:800;background:#38bdf8;color:#030712;box-shadow:0 0 24px rgba(56,189,248,0.5);">
-                    M
+                <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.15rem;">
+                  <div class="prof-avatar-stage">
+                    <div class="prof-avatar-core" id="profAvatarBig">M</div>
+                    <img id="profAvatarDeco" class="prof-avatar-deco" src="" alt="" aria-hidden="true" style="display:none;" onerror="this.style.display='none'" />
                   </div>
-                  <div>
-                    <h2 id="profDisplayName" style="margin:0;">Member</h2>
-                    <div id="profEmail" style="color:var(--text-muted);font-size:0.88rem;">user@example.com</div>
-                    <span class="channel-tag" id="profRoleBadge" style="margin-top:0.35rem;">RANK: MEMBER</span>
+                  <div style="min-width:0;">
+                    <h2 id="profDisplayName" style="margin:0;word-break:break-word;">Member</h2>
+                    <div id="profEmail" style="color:var(--text-muted);font-size:0.86rem;word-break:break-all;">user@example.com</div>
+                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:0.45rem;margin-top:0.4rem;">
+                      <span class="channel-tag" id="profRoleBadge">RANK: MEMBER</span>
+                      <button type="button" id="profDiscordBadge" class="prof-discord-chip" style="display:none;" title="Click to copy Discord ID"></button>
+                    </div>
                   </div>
                 </div>
 
-                <div style="display:flex;flex-wrap:wrap;gap:0.65rem;margin-top:1.25rem;">
+                <div style="display:flex;flex-wrap:wrap;gap:0.65rem;margin-top:1.1rem;">
                   <a href="/events-giveaway" class="nasha-btn-secondary">🎁 Browse Giveaways</a>
                   <a href="/admin" id="profAdminLink" class="nasha-btn-primary" style="display:none;">🛡️ Open Admin &amp; Founder Panel</a>
                   <button type="button" class="nasha-btn-ghost-sm" onclick="window.NashaAuth.signOut()">Sign Out</button>
@@ -91,15 +153,15 @@
                     <input class="nasha-input" id="editProfHandle" placeholder="@username" />
                   </div>
                   <div>
-                    <label class="nasha-label">Discord User ID (18-digit)</label>
-                    <input class="nasha-input" id="editProfDiscordId" placeholder="1089451239847125012" />
+                    <label class="nasha-label">Discord User ID (17–20 digits)</label>
+                    <input class="nasha-input" id="editProfDiscordId" placeholder="1354755206528630894" pattern="\d{17,20}" />
                   </div>
                 </div>
                 <div>
                   <label class="nasha-label">Preferred Glow Color</label>
                   <input class="nasha-input" type="color" id="editProfHex" value="#38bdf8" style="height:44px;padding:4px;" />
                 </div>
-                <button type="submit" class="nasha-btn-primary">Save Profile Settings</button>
+                <button type="submit" id="saveProfBtn" class="nasha-btn-primary">Save &amp; Sync Discord Profile</button>
               </form>
             </div>
           </div>
@@ -116,6 +178,10 @@
   <script src="auth-modal.js"></script>
   <script src="navbar.js"></script>
   <script>
+    function isDiscordSnowflake(val) {
+      return Boolean(val && /^\d{17,20}$/.test(String(val).trim()));
+    }
+
     function renderProfilePage() {
       const user = window.NashaAuth.getUser();
       const outView = document.getElementById("profileLoggedOutView");
@@ -131,41 +197,139 @@
       inView.style.display = "block";
 
       const hex = user.hexColor || "#38bdf8";
-      const avatar = document.getElementById("profAvatarBig");
-      avatar.textContent = (user.name || "N").charAt(0).toUpperCase();
-      avatar.style.background = hex;
-      avatar.style.boxShadow = `0 0 26px ${hex}`;
+      const avatarBox = document.getElementById("profAvatarBig");
+      const decoImg = document.getElementById("profAvatarDeco");
+      const fallbackLetter = (user.name || "N").charAt(0).toUpperCase();
+      const boundDiscord = isDiscordSnowflake(user.discordId);
+
+      // Show Discord avatar if linked, otherwise Google avatar, otherwise initial letter
+      const activePhoto = boundDiscord
+        ? (user.avatarUrl || user.googleAvatarUrl || user.photoURL || "")
+        : (user.googleAvatarUrl || user.photoURL || user.avatarUrl || "");
+
+      avatarBox.style.background = hex;
+      avatarBox.style.boxShadow = `0 0 26px ${hex}`;
+
+      if (activePhoto) {
+        avatarBox.innerHTML = `<img src="${activePhoto}" alt="${user.name}" onerror="this.parentElement.textContent='${fallbackLetter}'" />`;
+      } else {
+        avatarBox.textContent = fallbackLetter;
+      }
+
+      if (boundDiscord && user.decorationUrl) {
+        decoImg.src = user.decorationUrl;
+        decoImg.style.display = "block";
+      } else {
+        decoImg.style.display = "none";
+        decoImg.src = "";
+      }
 
       const roleDisplay = (user.role || "member").toUpperCase();
       document.getElementById("profDisplayName").textContent = user.name;
       document.getElementById("profEmail").textContent = `${user.email} • Signed in via ${(user.provider || "email").toUpperCase()}`;
       document.getElementById("profRoleBadge").textContent = `RANK: ${roleDisplay}`;
 
+      // Show Discord chip when a Discord ID is linked
+      const discordChip = document.getElementById("profDiscordBadge");
+      if (boundDiscord) {
+        const handlePart = user.discordHandle ? `${user.discordHandle} • ` : "";
+        discordChip.textContent = `Discord: ${handlePart}ID ${user.discordId}`;
+        discordChip.style.display = "inline-flex";
+        discordChip.onclick = () => {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(user.discordId).catch(() => {});
+          }
+          if (window.showToast) window.showToast(`Copied Discord ID: ${user.discordId}`);
+        };
+      } else {
+        discordChip.style.display = "none";
+      }
+
       document.getElementById("profAdminLink").style.display = window.NashaAuth.hasAccess("admin") ? "inline-flex" : "none";
 
       document.getElementById("editProfName").value = user.name || "";
       document.getElementById("editProfHandle").value = user.discordHandle || "";
-      document.getElementById("editProfDiscordId").value = user.discordId || "";
+      document.getElementById("editProfDiscordId").value = boundDiscord ? user.discordId : "";
       document.getElementById("editProfHex").value = hex;
+    }
+
+    // Automatically refresh live Discord PFP/Deco on /profile if user already has a linked Discord ID
+    async function syncOwnDiscordOnLoad() {
+      const user = window.NashaAuth.getUser();
+      if (!user || !isDiscordSnowflake(user.discordId) || !window.fetchLiveDiscordUser) return;
+
+      const live = await window.fetchLiveDiscordUser(user.discordId);
+      if (!live) return;
+
+      const nextHandle = live.username ? `@${live.username}` : user.discordHandle;
+      if (
+        user.avatarUrl !== live.avatarUrl ||
+        user.decorationUrl !== (live.decorationUrl || "") ||
+        user.discordHandle !== nextHandle
+      ) {
+        window.NashaAuth.updateProfile({
+          discordHandle: nextHandle,
+          avatarUrl: live.avatarUrl || user.avatarUrl || "",
+          decorationUrl: live.decorationUrl || "",
+          photoURL: live.avatarUrl || user.photoURL || ""
+        });
+        renderProfilePage();
+      }
     }
 
     document.getElementById("profileUpdateForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const discordId = document.getElementById("editProfDiscordId").value.trim();
-      const live = /^\d{17,20}$/.test(discordId) && window.fetchLiveDiscordUser
-        ? await window.fetchLiveDiscordUser(discordId)
-        : null;
+      const user = window.NashaAuth.getUser();
+      if (!user) return;
 
-      window.NashaAuth.updateProfile({
-        name: document.getElementById("editProfName").value.trim(),
-        discordHandle: document.getElementById("editProfHandle").value.trim() || (live ? `@${live.username}` : ""),
-        discordId,
-        avatarUrl: (live && live.avatarUrl) || undefined,
-        decorationUrl: (live && live.decorationUrl) || undefined,
-        hexColor: document.getElementById("editProfHex").value
-      });
-      renderProfilePage();
-      if (window.showToast) window.showToast("Profile updated!");
+      const saveBtn = document.getElementById("saveProfBtn");
+      const rawName = document.getElementById("editProfName").value.trim();
+      const rawHandle = document.getElementById("editProfHandle").value.trim();
+      const discordId = document.getElementById("editProfDiscordId").value.trim();
+      const hexColor = document.getElementById("editProfHex").value;
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Syncing...";
+
+      try {
+        if (isDiscordSnowflake(discordId)) {
+          const live = window.fetchLiveDiscordUser ? await window.fetchLiveDiscordUser(discordId) : null;
+          const resolvedName = (live && live.globalName) ? live.globalName : rawName;
+          const resolvedHandle = (live && live.username) ? `@${live.username}` : rawHandle;
+          const resolvedAvatar = (live && live.avatarUrl) ? live.avatarUrl : (user.avatarUrl || "");
+          const resolvedDeco = (live && live.decorationUrl) ? live.decorationUrl : "";
+
+          window.NashaAuth.updateProfile({
+            name: resolvedName,
+            discordHandle: resolvedHandle,
+            discordId,
+            avatarUrl: resolvedAvatar,
+            decorationUrl: resolvedDeco,
+            photoURL: resolvedAvatar || user.googleAvatarUrl || "",
+            hexColor
+          });
+          if (window.showToast) {
+            window.showToast(live ? `Linked Discord profile: ${resolvedName} (${resolvedHandle})` : "Discord ID saved!");
+          }
+        } else {
+          // If Discord ID is cleared, revert cleanly back to Google avatar
+          const fallbackAvatar = user.googleAvatarUrl || "";
+          window.NashaAuth.updateProfile({
+            name: rawName,
+            discordHandle: rawHandle,
+            discordId: "",
+            avatarUrl: fallbackAvatar,
+            decorationUrl: "",
+            photoURL: fallbackAvatar,
+            hexColor
+          });
+          if (window.showToast) window.showToast("Profile updated!");
+        }
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Save & Sync Discord Profile";
+        renderProfilePage();
+      }
     });
 
     document.getElementById("claimStaffKeyForm").addEventListener("submit", async (e) => {
@@ -182,18 +346,33 @@
         return;
       }
 
+      const live = isDiscordSnowflake(match.discordId) && window.fetchLiveDiscordUser
+        ? await window.fetchLiveDiscordUser(match.discordId)
+        : null;
+
+      const resolvedName = (live && live.globalName) || match.name || user.name;
+      const resolvedHandle = (live && live.username) ? `@${live.username}` : (match.discordHandle || user.discordHandle);
+      const resolvedAvatar = (live && live.avatarUrl) || match.avatarUrl || "";
+      const resolvedDeco = (live && live.decorationUrl) || match.decorationUrl || "";
+
       await window.NashaDB.saveStaffMember({
         ...match,
         uid: user.uid,
         email: user.email,
+        name: resolvedName,
+        discordHandle: resolvedHandle,
+        avatarUrl: resolvedAvatar,
+        decorationUrl: resolvedDeco,
         claimedByEmail: user.email
       });
       await window.NashaDB.assignRoleToEmail(user.email, match.rank || "staff");
       window.NashaAuth.updateProfile({
+        name: resolvedName,
         discordId: match.discordId,
-        discordHandle: match.discordHandle || user.discordHandle,
-        avatarUrl: match.avatarUrl || user.avatarUrl,
-        decorationUrl: match.decorationUrl || user.decorationUrl
+        discordHandle: resolvedHandle,
+        avatarUrl: resolvedAvatar,
+        decorationUrl: resolvedDeco,
+        photoURL: resolvedAvatar || user.googleAvatarUrl || ""
       });
 
       e.target.reset();
@@ -201,7 +380,10 @@
       if (window.showToast) window.showToast(`Bound to Discord ID ${match.discordId} (${match.rank})!`);
     });
 
-    document.addEventListener("DOMContentLoaded", renderProfilePage);
+    document.addEventListener("DOMContentLoaded", () => {
+      renderProfilePage();
+      syncOwnDiscordOnLoad();
+    });
     window.addEventListener("nasha:auth-changed", renderProfilePage);
   </script>
 </body>
