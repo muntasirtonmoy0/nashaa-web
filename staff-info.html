@@ -64,35 +64,38 @@
         return;
       }
 
-      grid.innerHTML = list.map(m => `
-        <div class="tilt-card glass-card rounded-3xl p-6 text-center flex flex-col justify-between">
-          <div>
-            <div class="relative w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-              <div class="w-16 h-16 rounded-full bg-gradient-to-br ${m.badgeColor} p-[2px] overflow-hidden">
-                ${m.avatarUrl
-                  ? `<img src="${m.avatarUrl}" alt="${m.name}" class="w-full h-full rounded-full object-cover" />`
-                  : `<div class="w-full h-full rounded-full bg-[#060d20] flex items-center justify-center font-display font-extrabold text-xl text-white">${(m.name || '🍁').replace(/[^A-Za-z]/g, '').charAt(0).toUpperCase() || '🍁'}</div>`
+      grid.innerHTML = list.map(m => {
+        const fallbackLetter = (m.name || '🍁').replace(/[^A-Za-z]/g, '').charAt(0).toUpperCase() || '🍁';
+        return `
+          <div class="tilt-card glass-card rounded-3xl p-6 text-center flex flex-col justify-between">
+            <div>
+              <div class="relative w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                <div class="w-16 h-16 rounded-full bg-gradient-to-br ${m.badgeColor} p-[2px] overflow-hidden">
+                  ${m.avatarUrl
+                    ? `<img src="${m.avatarUrl}" alt="${m.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" class="w-full h-full rounded-full object-cover" /><div style="display:none;" class="w-full h-full rounded-full bg-[#060d20] items-center justify-center font-display font-extrabold text-xl text-white">${fallbackLetter}</div>`
+                    : `<div class="w-full h-full rounded-full bg-[#060d20] flex items-center justify-center font-display font-extrabold text-xl text-white">${fallbackLetter}</div>`
+                  }
+                </div>
+                ${m.decorationUrl
+                  ? `<img src="${m.decorationUrl}" alt="" aria-hidden="true" onerror="this.style.display='none'" class="pointer-events-none absolute inset-0 w-20 h-20 object-contain z-10" />`
+                  : ''
                 }
+                ${m.onlineInDiscord ? '<span title="Online in Discord" class="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#060d20] z-20"></span>' : ''}
               </div>
-              ${m.decorationUrl
-                ? `<img src="${m.decorationUrl}" alt="" aria-hidden="true" class="pointer-events-none absolute inset-0 w-20 h-20 object-contain z-10" />`
-                : ''
-              }
-              ${m.onlineInDiscord ? '<span title="Online in Discord" class="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#060d20] z-20"></span>' : ''}
+              <span class="inline-block px-3 py-0.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-extrabold tracking-widest text-amber-300 uppercase mb-2">
+                ${m.rank || 'staff'}
+              </span>
+              <h2 class="font-display font-bold text-lg text-white">${m.name}</h2>
+              <p class="text-xs text-slate-400 mt-1 mb-4">${m.discordHandle ? m.discordHandle + ' • ' : ''}${m.role || ''}</p>
             </div>
-            <span class="inline-block px-3 py-0.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-extrabold tracking-widest text-amber-300 uppercase mb-2">
-              ${m.rank || 'staff'}
-            </span>
-            <h2 class="font-display font-bold text-lg text-white">${m.name}</h2>
-            <p class="text-xs text-slate-400 mt-1 mb-4">${m.discordHandle ? m.discordHandle + ' • ' : ''}${m.role || ''}</p>
-          </div>
 
-          <button onclick="copyDiscordId('${m.discordId}', '${(m.name || '').replace(/'/g, "\\'")}')" class="w-full py-2.5 px-3 rounded-xl bg-slate-950/80 hover:bg-cyan-500/15 border border-cyan-400/25 text-[11px] font-mono text-cyan-300 flex items-center justify-between transition cursor-pointer">
-            <span class="truncate">ID: ${m.discordId || 'Not Linked'}</span>
-            <i class="fa-regular fa-copy ml-2 text-slate-400"></i>
-          </button>
-        </div>
-      `).join('');
+            <button onclick="copyDiscordId('${m.discordId}', '${(m.name || '').replace(/'/g, "\\'")}')" class="w-full py-2.5 px-3 rounded-xl bg-slate-950/80 hover:bg-cyan-500/15 border border-cyan-400/25 text-[11px] font-mono text-cyan-300 flex items-center justify-between transition cursor-pointer">
+              <span class="truncate">ID: ${m.discordId || 'Not Linked'}</span>
+              <i class="fa-regular fa-copy ml-2 text-slate-400"></i>
+            </button>
+          </div>
+        `;
+      }).join('');
 
       if (window.attachTiltCards) window.attachTiltCards();
     }
