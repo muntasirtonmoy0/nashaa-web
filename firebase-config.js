@@ -218,9 +218,19 @@ window.NashaDB = (function () {
       const existing = byKey.get(mapKey);
       const isOnlineInWidget = widgetOnline.some((wm) => hasDiscordId && String(wm.id) === String(st.discordId));
 
-      const resolvedAvatar = st.avatarUrl || (existing && existing.avatarUrl) || (hasDiscordId ? "" : ((existing && existing.photoURL) || ""));
-      const resolvedDeco = st.decorationUrl || (existing && existing.decorationUrl) || "";
-      const resolvedName = st.name || (existing && existing.name) || "Staff";
+      const resolvedAvatar =
+        st.avatarUrl ||
+        (existing && existing.avatarUrl) ||
+        (hasDiscordId ? "" : ((existing && existing.photoURL) || ""));
+      const resolvedDeco =
+        st.decorationUrl ||
+        (existing && existing.decorationUrl) ||
+        "";
+      const resolvedName =
+        (st.lockCustomName && st.name) ||
+        st.name ||
+        (existing && existing.name) ||
+        "Staff";
 
       byKey.set(mapKey, {
         ...(existing || {}),
@@ -286,14 +296,36 @@ window.NashaDB = (function () {
     });
 
     firestoreInstance.collection("staff_members").onSnapshot((snap) => {
+      const prevList = readLocal(STORAGE_KEYS.STAFF, DEFAULT_DATA.staff);
       const list = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      snap.forEach((d) => {
+        const remote = { id: d.id, ...d.data() };
+        const local = prevList.find((x) => x.id === remote.id || (remote.discordId && x.discordId === remote.discordId)) || {};
+        list.push({
+          ...local,
+          ...remote,
+          name: remote.name || local.name,
+          avatarUrl: remote.avatarUrl || local.avatarUrl || "",
+          decorationUrl: remote.decorationUrl || local.decorationUrl || ""
+        });
+      });
       writeLocal(STORAGE_KEYS.STAFF, list);
     });
 
     firestoreInstance.collection("user_profiles").onSnapshot((snap) => {
+      const prevList = readLocal(STORAGE_KEYS.USER_PROFILES, DEFAULT_DATA.userProfiles);
       const list = [];
-      snap.forEach((d) => list.push({ uid: d.id, ...d.data() }));
+      snap.forEach((d) => {
+        const remote = { uid: d.id, ...d.data() };
+        const local = prevList.find((x) => x.uid === remote.uid || (remote.email && x.email === remote.email)) || {};
+        list.push({
+          ...local,
+          ...remote,
+          name: remote.name || local.name,
+          avatarUrl: remote.avatarUrl || local.avatarUrl || "",
+          decorationUrl: remote.decorationUrl || local.decorationUrl || ""
+        });
+      });
       writeLocal(STORAGE_KEYS.USER_PROFILES, list);
     });
 
