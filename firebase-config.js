@@ -8,8 +8,8 @@ window.NASHA_CONFIG = {
   defaultBoosts: 15,
   maxBoosts: 36,
   discordInvite: "https://discord.gg/nasha",
-  founderEmails: ["your-founder-email@gmail.com"],
-  adminEmails: ["your-admin-email@gmail.com"],
+  founderEmails: ["muntasirtonmoy10@gmail.com"],
+  adminEmails: ["muntasirtonmoy10@gmail.com"],
   firebase: {
     apiKey: "AIzaSyDMOa5okvfJsntVlM3CP1WNp7LRWuBVjI8",
     authDomain: "nashaa-717c9.firebaseapp.com",
