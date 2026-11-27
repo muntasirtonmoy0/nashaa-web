@@ -1,5 +1,5 @@
 /**
- * 🍁.Nʌsʜʌ™.🍁 — Navigation Bar (Admin & Founder Panel shown in Profile for authorized emails -> admin.html)
+ * 🍁.Nʌsʜʌ™.🍁 — Navigation Bar (Clean URLs without .html + Admin & Founder Panel inside Profile)
  */
 
 window.attachTiltCards = function () {
@@ -50,17 +50,20 @@ window.copyInviteLink = function () {
 
 window.NashaNavbar = (function () {
   const NAV_LINKS = [
-    { href: "index.html", label: "Home" },
-    { href: "announcement.html", label: "Announcements" },
-    { href: "events-giveaway.html", label: "Events & Giveaways" },
-    { href: "gallery.html", label: "Gallery" },
-    { href: "staff-info.html", label: "Staff Info" },
-    { href: "FAQ-about.html", label: "About & FAQ" }
+    { href: "/", label: "Home" },
+    { href: "/announcement", label: "Announcements" },
+    { href: "/events-giveaway", label: "Events & Giveaways" },
+    { href: "/gallery", label: "Gallery" },
+    { href: "/staff-info", label: "Staff Info" },
+    { href: "/FAQ-about", label: "About & FAQ" }
   ];
 
-  function getActiveFile() {
-    const path = decodeURIComponent(window.location.pathname.split("/").pop() || "index.html");
-    return path === "" ? "index.html" : path;
+  function normalizePath(p) {
+    const clean = decodeURIComponent(String(p || "/").split("?")[0].split("#")[0])
+      .replace(/\.html$/i, "")
+      .replace(/\/index$/i, "")
+      .replace(/\/+$/, "");
+    return clean === "" ? "/" : clean.toLowerCase();
   }
 
   function escapeHtml(str) {
@@ -72,12 +75,12 @@ window.NashaNavbar = (function () {
   function renderNavbar() {
     const host = document.getElementById("shared-navbar") || document.getElementById("nasha-navbar-root");
     if (!host) return;
-    const active = getActiveFile();
+    const active = normalizePath(window.location.pathname);
     const user = window.NashaAuth ? window.NashaAuth.getUser() : null;
     const canAdmin = window.NashaAuth ? window.NashaAuth.hasAccess("admin") : false;
 
     const linksHtml = NAV_LINKS.map((link) => {
-      const isActive = active.toLowerCase() === link.href.toLowerCase();
+      const isActive = active === normalizePath(link.href);
       return `<a href="${link.href}" class="nasha-nav-link ${isActive ? "active" : ""}">${link.label}</a>`;
     }).join("");
 
@@ -85,7 +88,7 @@ window.NashaNavbar = (function () {
     const roleLabel = user ? (user.role === "founder" ? "OWNER / FOUNDER" : user.role.toUpperCase()) : "GUEST";
 
     const adminDropdownLink = canAdmin
-      ? `<a href="admin.html" class="nasha-dropdown-item">🛡️ Admin &amp; Founder Panel</a>`
+      ? `<a href="/admin" class="nasha-dropdown-item">🛡️ Admin &amp; Founder Panel</a>`
       : "";
 
     const profileWidgetHtml = user
@@ -101,7 +104,7 @@ window.NashaNavbar = (function () {
               <div style="font-size:0.76rem;color:#7dd3fc;">${escapeHtml(user.email)}</div>
               <span class="channel-tag" style="margin-top:0.35rem;font-size:0.7rem;">ROLE: ${roleLabel}</span>
             </div>
-            <a href="profile.html" class="nasha-dropdown-item">👤 My Profile &amp; Discord Link</a>
+            <a href="/profile" class="nasha-dropdown-item">👤 My Profile &amp; Discord Link</a>
             ${adminDropdownLink}
             <button type="button" id="nashaSwitchAcctBtn" class="nasha-dropdown-item">🔄 Switch Account</button>
             <button type="button" id="nashaLogoutBtn" class="nasha-dropdown-item danger">🚪 Sign Out</button>
@@ -109,7 +112,7 @@ window.NashaNavbar = (function () {
         </div>
       `
       : `
-        <a href="profile.html" class="nasha-profile-icon-btn" id="nashaProfileLoginBtn" aria-label="Profile & Sign In" title="Profile / Sign In">
+        <a href="/profile" class="nasha-profile-icon-btn" id="nashaProfileLoginBtn" aria-label="Profile & Sign In" title="Profile / Sign In">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
@@ -121,7 +124,7 @@ window.NashaNavbar = (function () {
       <div class="nasha-navbar" id="nashaTopNav">
         <div class="nasha-scroll-progress" id="nashaScrollProgress"></div>
         <div class="nasha-nav-inner">
-          <a href="index.html" class="nasha-brand">
+          <a href="/" class="nasha-brand">
             <span class="nasha-brand-icon">🍁</span>
             <span class="nasha-brand-text">.Nʌsʜʌ™.</span>
           </a>
@@ -139,8 +142,8 @@ window.NashaNavbar = (function () {
         </div>
         <div class="nasha-mobile-drawer" id="nashaMobileDrawer">
           ${linksHtml}
-          <a href="profile.html" class="nasha-nav-link ${active.toLowerCase() === "profile.html" ? "active" : ""}">My Profile</a>
-          ${canAdmin ? `<a href="admin.html" class="nasha-nav-link ${active.toLowerCase() === "admin.html" ? "active" : ""}">Admin &amp; Founder Panel</a>` : ""}
+          <a href="/profile" class="nasha-nav-link ${active === "/profile" ? "active" : ""}">My Profile</a>
+          ${canAdmin ? `<a href="/admin" class="nasha-nav-link ${active === "/admin" ? "active" : ""}">Admin &amp; Founder Panel</a>` : ""}
         </div>
       </div>
     `;
