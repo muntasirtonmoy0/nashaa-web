@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Announcements — 🍁.Nʌsʜʌ™.🍁</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'sans-serif'],
+            script: ['Great Vibes', 'cursive'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="antialiased selection:bg-cyan-400/30 selection:text-cyan-200">
+  <header id="shared-navbar"></header>
+
+  <main class="relative z-10 pt-28 pb-24 px-4 sm:px-6 max-w-5xl mx-auto">
+    <div class="reveal-up text-center max-w-3xl mx-auto mb-12">
+      <span class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/25 text-cyan-300 text-xs font-bold uppercase tracking-widest mb-3">
+        <i class="fa-solid fa-bullhorn"></i> Server Announcements
+      </span>
+      <h1 class="font-display text-3xl sm:text-5xl font-extrabold text-white mb-3">
+        Latest <span class="text-bio-gradient">Announcements</span>
+      </h1>
+      <p class="text-sm text-slate-400">
+        Official updates and notices published from the Admin Panel for 🍁.Nʌsʜʌ™.🍁.
+      </p>
+    </div>
+
+    <div id="announcements-page-list" class="space-y-5"></div>
+  </main>
+
+  <script src="firebase-config.js"></script>
+  <script src="auth-modal.js"></script>
+  <script src="navbar.js"></script>
+  <script>
+    async function renderAnnouncementsPage() {
+      const container = document.getElementById("announcements-page-list");
+      const list = await window.NashaDB.getAnnouncements();
+
+      if (!list.length) {
+        container.innerHTML = `
+          <div class="glass-card rounded-3xl p-8 text-center">
+            <p class="text-slate-400 text-sm m-0">No announcements have been published yet.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = list.map(item => `
+        <article class="tilt-card glass-card rounded-3xl p-6 sm:p-8 reveal-up is-visible">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <span class="channel-tag">${item.tag || "#ANNC"}</span>
+            <span class="text-xs text-slate-400">
+              By <strong class="text-slate-200">${item.author || "Staff"}</strong> • ${item.createdAt ? new Date(item.createdAt).toLocaleString() : ""}
+            </span>
+          </div>
+          <h2 class="font-display text-xl sm:text-2xl font-extrabold text-white mb-2">${item.title}</h2>
+          <p class="text-sm text-slate-300 leading-relaxed m-0">${item.message}</p>
+        </article>
+      `).join("");
+
+      if (window.attachTiltCards) window.attachTiltCards();
+    }
+
+    document.addEventListener("DOMContentLoaded", renderAnnouncementsPage);
+    window.addEventListener("nasha:data-updated", renderAnnouncementsPage);
+  </script>
+</body>
+</html>
