@@ -1,5 +1,5 @@
 /**
- * 🍁.Nʌsʜʌ™.🍁 — Individual User Auth, Dynamic Rank Enforcement & Discord Profile Protection
+ * 🍁.Nʌsʜʌ™.🍁 — Individual User Auth, Dynamic Rank Enforcement & Discord Claim Switch
  * Ranks: founder, owner, admin, moderator, staff, member
  */
 
@@ -8,6 +8,10 @@ window.NashaAuth = (function () {
   const PROFILES_KEY = "nasha_profiles_by_uid_v10";
   const PANEL_RANKS = ["founder", "owner", "admin", "moderator", "staff"];
   let currentUser = null;
+
+  function hasValidDiscordId(val) {
+    return Boolean(val && /^\d{17,20}$/.test(String(val).trim()));
+  }
 
   function computeRoleFromConfig(email) {
     const clean = String(email || "").trim().toLowerCase();
@@ -48,12 +52,16 @@ window.NashaAuth = (function () {
     if (!userObj || !userObj.uid) return;
     const map = loadProfilesMap();
     const existing = map[userObj.uid] || {};
+    const boundDiscord = hasValidDiscordId(userObj.discordId ?? existing.discordId);
+    const googlePhoto = userObj.googleAvatarUrl || existing.googleAvatarUrl || userObj.photoURL || existing.photoURL || "";
+
     map[userObj.uid] = {
       ...existing,
       ...userObj,
+      googleAvatarUrl: googlePhoto,
       name: (existing && existing.name) || userObj.name,
-      avatarUrl: (existing && existing.avatarUrl) || userObj.avatarUrl || "",
-      decorationUrl: (existing && existing.decorationUrl) || userObj.decorationUrl || "",
+      avatarUrl: boundDiscord ? (userObj.avatarUrl || existing.avatarUrl || "") : googlePhoto,
+      decorationUrl: boundDiscord ? (userObj.decorationUrl ?? existing.decorationUrl ?? "") : "",
       role: computeRoleFromConfig(userObj.email || existing.email)
     };
     localStorage.setItem(PROFILES_KEY, JSON.stringify(map));
@@ -70,6 +78,8 @@ window.NashaAuth = (function () {
     const stableUid = uid || ("usr_" + btoa(cleanEmail || String(Date.now())).replace(/[^a-zA-Z0-9]/g, "").slice(0, 16));
     const existing = getSavedProfile(stableUid);
     const enforcedRole = computeRoleFromConfig(cleanEmail);
+    const boundDiscord = hasValidDiscordId(existing && existing.discordId);
+    const googlePhoto = (existing && existing.googleAvatarUrl) || photoURL || "";
 
     const merged = {
       uid: stableUid,
@@ -77,10 +87,11 @@ window.NashaAuth = (function () {
       email: cleanEmail,
       discordId: (existing && existing.discordId) || "",
       discordHandle: (existing && existing.discordHandle) || "",
-      avatarUrl: (existing && existing.avatarUrl) || "",
-      decorationUrl: (existing && existing.decorationUrl) || "",
+      googleAvatarUrl: googlePhoto,
+      avatarUrl: boundDiscord ? ((existing && existing.avatarUrl) || "") : googlePhoto,
+      decorationUrl: boundDiscord ? ((existing && existing.decorationUrl) || "") : "",
+      photoURL: boundDiscord ? ((existing && existing.avatarUrl) || googlePhoto) : googlePhoto,
       hexColor: (existing && existing.hexColor) || "#38bdf8",
-      photoURL: (existing && existing.photoURL) || photoURL || "",
       provider: provider || (existing && existing.provider) || "google",
       role: enforcedRole
     };
@@ -103,6 +114,7 @@ window.NashaAuth = (function () {
           if (latestProfile.name) parsed.name = latestProfile.name;
           if (latestProfile.discordId !== undefined) parsed.discordId = latestProfile.discordId;
           if (latestProfile.discordHandle !== undefined) parsed.discordHandle = latestProfile.discordHandle;
+          if (latestProfile.googleAvatarUrl !== undefined) parsed.googleAvatarUrl = latestProfile.googleAvatarUrl;
           if (latestProfile.avatarUrl !== undefined) parsed.avatarUrl = latestProfile.avatarUrl;
           if (latestProfile.decorationUrl !== undefined) parsed.decorationUrl = latestProfile.decorationUrl;
           if (latestProfile.hexColor !== undefined) parsed.hexColor = latestProfile.hexColor;
@@ -264,7 +276,7 @@ window.NashaAuth = (function () {
         <div class="nasha-modal-badge">🍁.Nʌsʜʌ™.🍁 ACCOUNT SIGN-IN</div>
         <h2 id="nashaAuthTitle" class="nasha-modal-title">Sign In to Your Account</h2>
         <p class="nasha-modal-sub" id="nashaAuthSub">
-          Each Google or Email account gets its own separate profile, #HEX color, and Discord link.
+          Each Google or Email account gets its own separate profile, glow color, and Discord link.
         </p>
 
         <div class="nasha-auth-tabs" role="tablist">
@@ -359,7 +371,7 @@ window.NashaAuth = (function () {
           uid: u.uid,
           name: (cloudProfile && cloudProfile.name) || u.displayName || (u.email ? u.email.split("@")[0] : "Google User"),
           email: u.email || "",
-          photoURL: (cloudProfile && cloudProfile.photoURL) || u.photoURL || "",
+          photoURL: u.photoURL || "",
           provider: "google"
         });
         setSession(userObj);
@@ -396,7 +408,7 @@ window.NashaAuth = (function () {
             uid: cred.user.uid,
             name: (cloudProfile && cloudProfile.name) || cred.user.displayName || displayName,
             email: cred.user.email || email,
-            photoURL: (cloudProfile && cloudProfile.photoURL) || cred.user.photoURL || "",
+            photoURL: cred.user.photoURL || "",
             provider: "email"
           });
           setSession(userObj);
@@ -466,7 +478,7 @@ window.NashaAuth = (function () {
     if (!user) {
       el.innerHTML = `
         <div class="glass-card" style="max-width:560px;margin:0 auto;text-align:center;padding:2.25rem;">
-          <div class="channel-tag" style="margin-bottom:0.75rem;">🔒 AUTH GATE • SIGN IN REQUIRED</div>
+          <div class="channel-tag" style="margin-bottom:0.75rem;">AUTH GATE • SIGN IN REQUIRED</div>
           <h2 style="margin:0 0 0.6rem;">${title}</h2>
           <p style="color:var(--text-muted);margin:0 0 1.4rem;">${desc}</p>
           <button type="button" class="nasha-btn-primary" onclick="window.NashaAuth.openModal('login', '${desc.replace(/'/g, "\\'")}')">
@@ -477,10 +489,10 @@ window.NashaAuth = (function () {
     } else {
       el.innerHTML = `
         <div class="glass-card" style="max-width:560px;margin:0 auto;text-align:center;padding:2.25rem;border-color:rgba(244,63,94,0.45);">
-          <div class="channel-tag" style="margin-bottom:0.75rem;color:#fda4af;border-color:rgba(244,63,94,0.4);">⛔ INSUFFICIENT CLEARANCE</div>
+          <div class="channel-tag" style="margin-bottom:0.75rem;color:#fda4af;border-color:rgba(244,63,94,0.4);">INSUFFICIENT CLEARANCE</div>
           <h2 style="margin:0 0 0.6rem;">${requiredRole === "founder" ? "Founder Access Only" : "Admin / Staff Access Only"}</h2>
           <p style="color:var(--text-muted);margin:0 0 1.4rem;">
-            Signed in as <strong>${user.name}</strong> (${user.email} — Role: <code>${user.role.toUpperCase()}</code>). Switch to an authorized account to open this panel.
+            Signed in as <strong>${user.name}</strong> (${user.email} — Rank: <code>${user.role.toUpperCase()}</code>). Switch to an authorized account to open this panel.
           </p>
           <button type="button" class="nasha-btn-secondary" onclick="window.NashaAuth.openModal('login')">
             Switch Account
@@ -508,7 +520,7 @@ window.NashaAuth = (function () {
             uid: user.uid,
             name: (cloudProfile && cloudProfile.name) || user.displayName || (user.email ? user.email.split("@")[0] : "Member"),
             email: user.email || "",
-            photoURL: (cloudProfile && cloudProfile.photoURL) || user.photoURL || "",
+            photoURL: user.photoURL || "",
             provider: (user.providerData && user.providerData[0] && user.providerData[0].providerId) || "firebase"
           });
           setSession(userObj);
