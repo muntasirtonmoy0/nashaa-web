@@ -102,7 +102,7 @@ window.NashaDB = (function () {
       members: 2720,
       online: null,
       widgetMembers: [],
-      announcement: "We now have <strong class='text-white'>2,720+ Members</strong> • #GVWY Live!"
+      announcement: "We now have <strong class='text-white'>2,720+ Members</strong> • Giveaways Live!"
     },
     settings: {
       maintenanceMode: false,
@@ -179,7 +179,6 @@ window.NashaDB = (function () {
 
     const byKey = new Map();
 
-    // 1. Add logged-in users who hold a staff/founder/owner/admin/moderator rank
     profiles.forEach((p) => {
       const cleanEmail = String(p.email || "").trim().toLowerCase();
       const assigned = assignments.find((a) => String(a.email || "").toLowerCase() === cleanEmail);
@@ -212,7 +211,6 @@ window.NashaDB = (function () {
       });
     });
 
-    // 2. Merge pre-registered / manual staff entries (including Claim Key & live Discord PFP/Deco entries)
     manualStaff.forEach((st) => {
       const rank = normalizeRank(st.rank || st.roleRank || st.role);
       const hasDiscordId = st.discordId && /^\d{17,20}$/.test(String(st.discordId));
@@ -419,7 +417,7 @@ window.NashaDB = (function () {
     const item = {
       id: "annc-" + Date.now(),
       title: String(title || "").trim(),
-      tag: String(tag || "#ANNC").trim(),
+      tag: String(tag || "UPDATE").trim(),
       message: String(message || "").trim(),
       author: (window.NashaAuth && window.NashaAuth.getUser && window.NashaAuth.getUser()?.name) || "Staff",
       createdAt: new Date().toISOString()
@@ -664,7 +662,7 @@ window.syncDiscordNoBot = async function () {
       await window.NashaDB.updateStats({
         members: nextMembers,
         online: typeof data.approximate_presence_count === "number" ? data.approximate_presence_count : current.online,
-        announcement: `We now have <strong class='text-white'>${nextMembers.toLocaleString()}+ Members</strong> • #GVWY Live!`
+        announcement: `We now have <strong class='text-white'>${nextMembers.toLocaleString()}+ Members</strong> • Giveaways Live!`
       });
     }
   } catch (err) {
