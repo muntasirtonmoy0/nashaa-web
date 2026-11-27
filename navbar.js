@@ -1,6 +1,5 @@
 /**
- * 🍁.Nʌsʜʌ™.🍁 — Unified Navigation Bar, Bioluminescent Canvas, Scroll Reveal & Helper Controller
- * Supports both #shared-navbar (Tailwind pages) and #nasha-navbar-root (Modular pages).
+ * 🍁.Nʌsʜʌ™.🍁 — Navigation Bar (Admin Panel shown only in Profile for authorized emails)
  */
 
 window.attachTiltCards = function () {
@@ -50,14 +49,13 @@ window.copyInviteLink = function () {
 };
 
 window.NashaNavbar = (function () {
+  // Public links only — Admin & Owner/Founder controls live inside Profile for authorized emails
   const NAV_LINKS = [
     { href: "index.html", label: "Home" },
     { href: "events-giveaway.html", label: "Events & #GVWY" },
     { href: "gallery.html", label: "Gallery" },
     { href: "staff-info.html", label: "Staff Info" },
-    { href: "FAQ-about.html", label: "About & FAQ" },
-    { href: "admin-panel.html", label: "Admin Panel" },
-    { href: "founder-panel.html", label: "Founder Panel" }
+    { href: "FAQ-about.html", label: "About & FAQ" }
   ];
 
   function getActiveFile() {
@@ -76,6 +74,7 @@ window.NashaNavbar = (function () {
     if (!host) return;
     const active = getActiveFile();
     const user = window.NashaAuth ? window.NashaAuth.getUser() : null;
+    const canAdmin = window.NashaAuth ? window.NashaAuth.hasAccess("admin") : false;
 
     const linksHtml = NAV_LINKS.map((link) => {
       const isActive = active.toLowerCase() === link.href.toLowerCase();
@@ -83,7 +82,11 @@ window.NashaNavbar = (function () {
     }).join("");
 
     const initials = user && user.name ? user.name.trim().charAt(0).toUpperCase() : "";
-    const roleLabel = user ? user.role.toUpperCase() : "GUEST";
+    const roleLabel = user ? (user.role === "founder" ? "OWNER / FOUNDER" : user.role.toUpperCase()) : "GUEST";
+
+    const adminDropdownLink = canAdmin
+      ? `<a href="admin-panel.html" class="nasha-dropdown-item">🛡️ Admin Panel</a>`
+      : "";
 
     const profileWidgetHtml = user
       ? `
@@ -99,8 +102,7 @@ window.NashaNavbar = (function () {
               <span class="channel-tag" style="margin-top:0.35rem;font-size:0.7rem;">ROLE: ${roleLabel}</span>
             </div>
             <a href="profile.html" class="nasha-dropdown-item">👤 My Profile &amp; Discord Link</a>
-            <a href="admin-panel.html" class="nasha-dropdown-item">🛡️ Admin Panel (#GVWY &amp; Events)</a>
-            <a href="founder-panel.html" class="nasha-dropdown-item">👑 Founder Panel (.CHIEF. Controls)</a>
+            ${adminDropdownLink}
             <button type="button" id="nashaSwitchAcctBtn" class="nasha-dropdown-item">🔄 Switch Account</button>
             <button type="button" id="nashaLogoutBtn" class="nasha-dropdown-item danger">🚪 Sign Out</button>
           </div>
@@ -138,6 +140,7 @@ window.NashaNavbar = (function () {
         <div class="nasha-mobile-drawer" id="nashaMobileDrawer">
           ${linksHtml}
           <a href="profile.html" class="nasha-nav-link ${active.toLowerCase() === "profile.html" ? "active" : ""}">My Profile</a>
+          ${canAdmin ? `<a href="admin-panel.html" class="nasha-nav-link ${active.toLowerCase() === "admin-panel.html" ? "active" : ""}">Admin Panel</a>` : ""}
         </div>
       </div>
     `;
