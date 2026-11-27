@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Profile & Auth Gate — 🍁.Nʌsʜʌ™.🍁</title>
+  <title>My Profile — 🍁.Nʌsʜʌ™.🍁</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -19,18 +19,18 @@
           <span class="section-kicker">👤 MEMBER &amp; STAFF PROFILE HUB</span>
           <h1 class="section-title">Your 🍁.Nʌsʜʌ™.🍁 Identity &amp; Discord Link</h1>
           <p style="color:var(--text-muted);">
-            Sign in with Google or Email, customize your #HEX profile glow, link your Discord Snowflake ID, and jump to your authorized panels.
+            Sign in with Google or Email, customize your #HEX profile glow, and link your Discord Snowflake ID.
           </p>
         </div>
 
-        <!-- Logged-Out Auth Gate Card -->
+        <!-- Logged-Out View -->
         <div id="profileLoggedOutView" class="glass-card" style="max-width:540px;margin:0 auto;text-align:center;padding:2.4rem;">
           <div style="width:68px;height:68px;border-radius:50%;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,#38bdf8,#1d4ed8);font-size:1.8rem;box-shadow:0 0 28px rgba(56,189,248,0.45);">
             👤
           </div>
           <h2 style="margin:0 0 0.5rem;">Welcome to 🍁.Nʌsʜʌ™.🍁</h2>
           <p style="color:var(--text-muted);margin:0 0 1.5rem;">
-            Sign in with Google or Email to create your server profile, enter #GVWY giveaways, or access Admin &amp; Founder panels.
+            Sign in with your own Google or Email account to manage your profile and enter #GVWY giveaways.
           </p>
           <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
             <button type="button" class="nasha-btn-primary" onclick="window.NashaAuth.openModal('login')">Sign In / Google Login</button>
@@ -38,26 +38,26 @@
           </div>
         </div>
 
-        <!-- Logged-In Profile Dashboard -->
+        <!-- Logged-In View -->
         <div id="profileLoggedInView" style="display:none;">
           <div class="grid-2">
             <!-- Profile Identity Card -->
             <div class="glass-card" id="profileHeroCard">
               <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;">
                 <div id="profAvatarBig" style="width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.65rem;font-weight:800;background:#38bdf8;color:#030712;box-shadow:0 0 24px rgba(56,189,248,0.5);">
-                  T
+                  M
                 </div>
                 <div>
-                  <h2 id="profDisplayName" style="margin:0;">TONMOY</h2>
-                  <div id="profEmail" style="color:var(--text-muted);font-size:0.88rem;">chief@nasha.gg</div>
-                  <span class="channel-tag" id="profRoleBadge" style="margin-top:0.35rem;">CLEARANCE: FOUNDER</span>
+                  <h2 id="profDisplayName" style="margin:0;">Member</h2>
+                  <div id="profEmail" style="color:var(--text-muted);font-size:0.88rem;">user@example.com</div>
+                  <span class="channel-tag" id="profRoleBadge" style="margin-top:0.35rem;">CLEARANCE: MEMBER</span>
                 </div>
               </div>
 
               <div style="display:flex;flex-wrap:wrap;gap:0.65rem;margin-top:1.25rem;">
                 <a href="events-giveaway.html" class="nasha-btn-secondary">🎁 Browse #GVWY</a>
-                <a href="admin-panel.html" id="profAdminLink" class="nasha-btn-secondary" style="display:none;">🛡️ Open Admin Panel</a>
-                <a href="founder-panel.html" id="profFounderLink" class="nasha-btn-primary" style="display:none;">👑 Open Founder Panel</a>
+                <!-- Visible ONLY to authorized Admin & Founder emails -->
+                <a href="admin-panel.html" id="profAdminLink" class="nasha-btn-primary" style="display:none;">🛡️ Open Admin Panel</a>
                 <button type="button" class="nasha-btn-ghost-sm" onclick="window.NashaAuth.signOut()">Sign Out</button>
               </div>
             </div>
@@ -122,12 +122,13 @@
       avatar.style.background = hex;
       avatar.style.boxShadow = `0 0 26px ${hex}`;
 
+      const roleDisplay = user.role === "founder" ? "OWNER / FOUNDER" : (user.role || "member").toUpperCase();
       document.getElementById("profDisplayName").textContent = user.name;
       document.getElementById("profEmail").textContent = `${user.email} • Signed in via ${(user.provider || "email").toUpperCase()}`;
-      document.getElementById("profRoleBadge").textContent = `CLEARANCE: ${(user.role || "member").toUpperCase()}`;
+      document.getElementById("profRoleBadge").textContent = `CLEARANCE: ${roleDisplay}`;
 
+      // Only show Admin Panel button if user's email is authorized as Admin or Founder
       document.getElementById("profAdminLink").style.display = window.NashaAuth.hasAccess("admin") ? "inline-flex" : "none";
-      document.getElementById("profFounderLink").style.display = window.NashaAuth.hasAccess("founder") ? "inline-flex" : "none";
 
       document.getElementById("editProfName").value = user.name || "";
       document.getElementById("editProfHandle").value = user.discordHandle || "";
@@ -144,7 +145,7 @@
         hexColor: document.getElementById("editProfHex").value
       });
       renderProfilePage();
-      alert("Profile updated!");
+      if (window.showToast) window.showToast("Profile updated!");
     });
 
     document.addEventListener("DOMContentLoaded", renderProfilePage);
