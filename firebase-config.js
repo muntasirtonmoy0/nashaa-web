@@ -1,6 +1,6 @@
 /**
- * 🍁.Nʌsʜʌ™.🍁 — Complete Firebase Config (nashaa-717c9), Firestore Sync & Bot-Free Discord Sync
- * Ranks: founder, owner, admin, moderator, staff, member
+ * 🍁.Nʌsʜʌ™.🍁 — Complete Firebase Config (nashaa-717c9), Role Assignments, Staff Activity & Announcements
+ * Load BEFORE auth-modal.js and navbar.js on every HTML page.
  */
 
 window.NASHA_CONFIG = {
@@ -25,12 +25,65 @@ window.NASHA_CONFIG = {
   }
 };
 
+window.ROLE_PERMISSIONS = {
+  founder: {
+    label: "Founder",
+    perms: [
+      "Full access to Admin Panel & Founder Panel",
+      "Assign or remove email roles (founder, owner, admin, moderator, staff, member)",
+      "View all staff activity logs",
+      "Publish & delete announcements, giveaways/events, and update live server stats"
+    ]
+  },
+  owner: {
+    label: "Owner",
+    perms: [
+      "Full access to Admin Panel & Founder Panel",
+      "Assign or remove email roles and view all staff activity logs",
+      "Publish & delete announcements, giveaways/events, and update live server stats"
+    ]
+  },
+  admin: {
+    label: "Admin",
+    perms: [
+      "Access Admin Panel",
+      "Publish & delete announcements, giveaways, and server events",
+      "Moderate RSVPs and log staff actions"
+    ]
+  },
+  moderator: {
+    label: "Moderator",
+    perms: [
+      "Access Admin Panel",
+      "Publish & delete announcements and community events",
+      "Moderate active event entries"
+    ]
+  },
+  staff: {
+    label: "Staff",
+    perms: [
+      "Access Admin Panel",
+      "Publish announcements and community events"
+    ]
+  },
+  member: {
+    label: "Member",
+    perms: [
+      "View public pages, events, and announcements",
+      "RSVP to giveaways/events and customize personal profile"
+    ]
+  }
+};
+
 window.NashaDB = (function () {
   const STORAGE_KEYS = {
-    STATS: "nasha_live_stats_v8",
-    EVENTS: "nasha_events_giveaways_v8",
-    STAFF: "nasha_staff_roster_v8",
-    SETTINGS: "nasha_founder_settings_v8"
+    STATS: "nasha_live_stats_v9",
+    EVENTS: "nasha_events_giveaways_v9",
+    STAFF: "nasha_staff_roster_v9",
+    SETTINGS: "nasha_founder_settings_v9",
+    ANNOUNCEMENTS: "nasha_announcements_v9",
+    ROLE_ASSIGNMENTS: "nasha_role_assignments_v9",
+    ACTIVITY: "nasha_staff_activity_v9"
   };
 
   const VALID_RANKS = ["founder", "owner", "admin", "moderator", "staff", "member"];
@@ -51,7 +104,10 @@ window.NashaDB = (function () {
       autoSyncInvite: true
     },
     events: [],
-    staff: []
+    staff: [],
+    announcements: [],
+    roleAssignments: [],
+    activity: []
   };
 
   let firebaseApp = null;
@@ -109,7 +165,7 @@ window.NashaDB = (function () {
     return {
       ...st,
       rank,
-      role: st.role || st.bio || st.badge || rank.toUpperCase(),
+      role: st.role || st.bio || st.badge || rank,
       bio: st.bio || st.role || "",
       badgeColor: st.badgeColor || colorMap[rank]
     };
@@ -119,6 +175,10 @@ window.NashaDB = (function () {
     const stats = readLocal(STORAGE_KEYS.STATS, DEFAULT_DATA.stats);
     const events = readLocal(STORAGE_KEYS.EVENTS, DEFAULT_DATA.events);
     const staff = readLocal(STORAGE_KEYS.STAFF, DEFAULT_DATA.staff).map(normalizeStaff);
+    const announcements = readLocal(STORAGE_KEYS.ANNOUNCEMENTS, DEFAULT_DATA.announcements);
+    const roleAssignments = readLocal(STORAGE_KEYS.ROLE_ASSIGNMENTS, DEFAULT_DATA.roleAssignments);
+    const activity = readLocal(STORAGE_KEYS.ACTIVITY, DEFAULT_DATA.activity);
+
     window.NASHA_STORE = {
       server: {
         name: window.NASHA_CONFIG.serverName,
@@ -128,7 +188,10 @@ window.NashaDB = (function () {
         inviteUrl: window.NASHA_CONFIG.discordInvite
       },
       events,
-      staff
+      staff,
+      announcements,
+      roleAssignments,
+      activity
     };
   }
 
@@ -150,6 +213,122 @@ window.NashaDB = (function () {
       snap.forEach((d) => list.push(normalizeStaff({ id: d.id, ...d.data() })));
       writeLocal(STORAGE_KEYS.STAFF, list);
     });
+    firestoreInstance.collection("announcements").orderBy("createdAt", "desc").onSnapshot((snap) => {
+      const list = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      writeLocal(STORAGE_KEYS.ANNOUNCEMENTS, list);
+    });
+    firestoreInstance.collection("role_assignments").onSnapshot((snap) => {
+      const list = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data(), role: normalizeRank(d.data().role) }));
+      writeLocal(STORAGE_KEYS.ROLE_ASSIGNMENTS, list);
+    });
+    firestoreInstance.collection("staff_activity").orderBy("timestamp", "desc").limit(50).onSnapshot((snap) => {
+      const list = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      writeLocal(STORAGE_KEYS.ACTIVITY, list);
+    });
+  }
+
+  async function logActivity(actionText, category = "general") {
+    const user = window.NashaAuth && window.NashaAuth.getUser ? window.NashaAuth.getUser() : null;
+    const entry = {
+      id: "act-" + Date.now() + "-" + Math.random().toString(36).slice(2, 6),
+      actorName: (user && user.name) || "Staff",
+      actorEmail: (user && user.email) || "",
+      actorRole: normalizeRank(user && user.role),
+      action: actionText,
+      category,
+      timestamp: new Date().toISOString()
+    };
+    const current = readLocal(STORAGE_KEYS.ACTIVITY, DEFAULT_DATA.activity);
+    current.unshift(entry);
+    writeLocal(STORAGE_KEYS.ACTIVITY, current.slice(0, 50));
+
+    if (firestoreInstance && firebaseAuthInstance && firebaseAuthInstance.currentUser) {
+      await firestoreInstance.collection("staff_activity").doc(entry.id).set(entry).catch(() => {});
+    }
+    return entry;
+  }
+
+  async function getActivity() {
+    return readLocal(STORAGE_KEYS.ACTIVITY, DEFAULT_DATA.activity);
+  }
+
+  async function getRoleAssignments() {
+    return readLocal(STORAGE_KEYS.ROLE_ASSIGNMENTS, DEFAULT_DATA.roleAssignments);
+  }
+
+  async function assignRoleToEmail(email, role) {
+    const cleanEmail = String(email || "").trim().toLowerCase();
+    const cleanRole = normalizeRank(role);
+    if (!cleanEmail) return null;
+
+    const docId = cleanEmail.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const entry = {
+      id: docId,
+      email: cleanEmail,
+      role: cleanRole,
+      updatedAt: new Date().toISOString()
+    };
+
+    const current = await getRoleAssignments();
+    const idx = current.findIndex((r) => String(r.email).toLowerCase() === cleanEmail);
+    if (idx >= 0) current[idx] = entry;
+    else current.push(entry);
+    writeLocal(STORAGE_KEYS.ROLE_ASSIGNMENTS, current);
+
+    if (firestoreInstance && firebaseAuthInstance && firebaseAuthInstance.currentUser) {
+      await firestoreInstance.collection("role_assignments").doc(docId).set(entry, { merge: true }).catch(() => {});
+    }
+    await logActivity(`Assigned rank "${cleanRole}" to ${cleanEmail}`, "role");
+    return entry;
+  }
+
+  async function removeRoleAssignment(email) {
+    const cleanEmail = String(email || "").trim().toLowerCase();
+    const docId = cleanEmail.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const current = (await getRoleAssignments()).filter((r) => String(r.email).toLowerCase() !== cleanEmail);
+    writeLocal(STORAGE_KEYS.ROLE_ASSIGNMENTS, current);
+
+    if (firestoreInstance && firebaseAuthInstance && firebaseAuthInstance.currentUser) {
+      await firestoreInstance.collection("role_assignments").doc(docId).delete().catch(() => {});
+    }
+    await logActivity(`Removed custom rank assignment for ${cleanEmail}`, "role");
+  }
+
+  async function getAnnouncements() {
+    return readLocal(STORAGE_KEYS.ANNOUNCEMENTS, DEFAULT_DATA.announcements);
+  }
+
+  async function addAnnouncement({ title, tag, message }) {
+    const item = {
+      id: "annc-" + Date.now(),
+      title: String(title || "").trim(),
+      tag: String(tag || "#ANNC").trim(),
+      message: String(message || "").trim(),
+      author: (window.NashaAuth && window.NashaAuth.getUser && window.NashaAuth.getUser()?.name) || "Staff",
+      createdAt: new Date().toISOString()
+    };
+    const current = await getAnnouncements();
+    current.unshift(item);
+    writeLocal(STORAGE_KEYS.ANNOUNCEMENTS, current);
+
+    if (firestoreInstance && firebaseAuthInstance && firebaseAuthInstance.currentUser) {
+      await firestoreInstance.collection("announcements").doc(item.id).set(item).catch(() => {});
+    }
+    await logActivity(`Published announcement: "${item.title}"`, "announcement");
+    return item;
+  }
+
+  async function deleteAnnouncement(id) {
+    const current = (await getAnnouncements()).filter((a) => String(a.id) !== String(id));
+    writeLocal(STORAGE_KEYS.ANNOUNCEMENTS, current);
+
+    if (firestoreInstance && firebaseAuthInstance && firebaseAuthInstance.currentUser) {
+      await firestoreInstance.collection("announcements").doc(String(id)).delete().catch(() => {});
+    }
+    await logActivity(`Deleted announcement ID ${id}`, "announcement");
   }
 
   async function saveUserProfile(userObj) {
@@ -193,6 +372,7 @@ window.NashaDB = (function () {
     if (firestoreInstance && firebaseAuthInstance && firebaseAuthInstance.currentUser) {
       await firestoreInstance.collection("events_giveaways").doc(item.id).set(item).catch(() => {});
     }
+    await logActivity(`Created ${item.type || "event"}: "${item.title}"`, "event");
     return item;
   }
 
@@ -202,6 +382,7 @@ window.NashaDB = (function () {
     if (firestoreInstance && firebaseAuthInstance && firebaseAuthInstance.currentUser) {
       await firestoreInstance.collection("events_giveaways").doc(String(id)).delete().catch(() => {});
     }
+    await logActivity(`Deleted event ID ${id}`, "event");
   }
 
   async function toggleRsvp(id) {
@@ -234,6 +415,7 @@ window.NashaDB = (function () {
     if (firestoreInstance && firebaseAuthInstance && firebaseAuthInstance.currentUser) {
       await firestoreInstance.collection("staff_members").doc(entry.id).set(entry, { merge: true }).catch(() => {});
     }
+    await logActivity(`Synced staff ${entry.name} (${entry.rank})`, "staff");
     return entry;
   }
 
@@ -243,6 +425,7 @@ window.NashaDB = (function () {
     if (firestoreInstance && firebaseAuthInstance && firebaseAuthInstance.currentUser) {
       await firestoreInstance.collection("staff_members").doc(String(id)).delete().catch(() => {});
     }
+    await logActivity(`Removed staff member ID ${id}`, "staff");
   }
 
   syncLegacyStore();
@@ -263,7 +446,15 @@ window.NashaDB = (function () {
     toggleRsvp,
     getStaff,
     saveStaffMember,
-    deleteStaffMember
+    deleteStaffMember,
+    getAnnouncements,
+    addAnnouncement,
+    deleteAnnouncement,
+    getRoleAssignments,
+    assignRoleToEmail,
+    removeRoleAssignment,
+    logActivity,
+    getActivity
   };
 })();
 
@@ -276,18 +467,23 @@ window.syncDiscordNoBot = async function () {
   if (!code) return;
 
   try {
-    const res = await fetch(`https://discord.com/api/v10/invites/${encodeURIComponent(code)}?with_counts=true`);
+    const res = await fetch(
+      `https://discord.com/api/v10/invites/${encodeURIComponent(code)}?with_counts=true`,
+      { cache: "no-store" }
+    );
     if (!res.ok) return;
     const data = await res.json();
     if (typeof data.approximate_member_count === "number") {
-      const liveMembers = data.approximate_member_count;
+      const current = await window.NashaDB.getStats();
+      const nextMembers = Math.max(Number(current.members || 0), Number(data.approximate_member_count));
       await window.NashaDB.updateStats({
-        members: liveMembers,
-        announcement: `We now have <strong class='text-white'>${liveMembers.toLocaleString()}+ Members</strong> • #GVWY Live!`
+        members: nextMembers,
+        online: typeof data.approximate_presence_count === "number" ? data.approximate_presence_count : current.online,
+        announcement: `We now have <strong class='text-white'>${nextMembers.toLocaleString()}+ Members</strong> • #GVWY Live!`
       });
     }
   } catch (err) {
-    console.warn("[Discord No-Bot Sync]", err);
+    console.warn("[Discord Invite Sync Error]", err);
   }
 };
 
@@ -298,7 +494,10 @@ window.syncDiscordWidgetOnline = async function () {
   if (!guildId || guildId === "YOUR_GUILD_ID") return null;
 
   try {
-    const res = await fetch(`https://discord.com/api/guilds/${encodeURIComponent(guildId)}/widget.json`);
+    const res = await fetch(
+      `https://discord.com/api/guilds/${encodeURIComponent(guildId)}/widget.json`,
+      { cache: "no-store" }
+    );
     if (!res.ok) return null;
     const data = await res.json();
     if (typeof data.presence_count === "number") {
