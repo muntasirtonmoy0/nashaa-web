@@ -19,7 +19,7 @@
           <span class="section-kicker" id="panelKicker">🛡️ ADMIN &amp; STAFF PANEL</span>
           <h1 class="section-title" id="panelTitle">Admin Panel — Announcements &amp; Events</h1>
           <p style="color:var(--text-muted);" id="panelSubtitle">
-            Publish announcements to announcement.html, host giveaways/events, and moderate entries.
+            Publish announcements to the Announcements page, host giveaways and events, and moderate entries.
           </p>
 
           <div id="ownerModeSwitchWrap" style="display:none;margin-top:1.15rem;">
@@ -35,14 +35,14 @@
           <!-- ADMIN PANEL VIEW -->
           <div id="adminModeSection">
             <div class="grid-2">
-              <!-- Publish Announcement -> announcement.html -->
+              <!-- Publish Announcement -> /announcement -->
               <div class="glass-card">
-                <span class="channel-tag">ANNOUNCEMENT PUBLISHER → announcement.html</span>
+                <span class="channel-tag">ANNOUNCEMENT PUBLISHER → /announcement</span>
                 <h2 style="margin:0.75rem 0 1rem;">Make an Announcement</h2>
                 <form id="createAnnouncementForm" style="display:flex;flex-direction:column;gap:0.85rem;">
                   <div>
-                    <label class="nasha-label">Tag</label>
-                    <input class="nasha-input" id="anncTag" value="#ANNC" required />
+                    <label class="nasha-label">Badge Label</label>
+                    <input class="nasha-input" id="anncTag" value="UPDATE" placeholder="e.g. UPDATE, NEWS, ALERT" required />
                   </div>
                   <div>
                     <label class="nasha-label">Announcement Title</label>
@@ -50,7 +50,7 @@
                   </div>
                   <div>
                     <label class="nasha-label">Announcement Message</label>
-                    <textarea class="nasha-textarea" id="anncMessage" rows="3" placeholder="Write the announcement shown on announcement.html..." required></textarea>
+                    <textarea class="nasha-textarea" id="anncMessage" rows="3" placeholder="Write the announcement shown on /announcement..." required></textarea>
                   </div>
                   <button type="submit" class="nasha-btn-primary">Publish Announcement</button>
                 </form>
@@ -63,7 +63,7 @@
 
               <!-- Host Giveaway / Event -->
               <div class="glass-card">
-                <span class="channel-tag">#GVWY &amp; EVENTS PUBLISHER</span>
+                <span class="channel-tag">GIVEAWAYS &amp; EVENTS PUBLISHER → /events-giveaway</span>
                 <h2 style="margin:0.75rem 0 1rem;">Host New Giveaway or Event</h2>
                 <form id="createEventForm" style="display:flex;flex-direction:column;gap:0.85rem;">
                   <div>
@@ -75,8 +75,8 @@
                     </select>
                   </div>
                   <div>
-                    <label class="nasha-label">Channel Tag</label>
-                    <input class="nasha-input" id="evChannel" value="#GVWY" required />
+                    <label class="nasha-label">Badge Label</label>
+                    <input class="nasha-input" id="evChannel" value="GIVEAWAY" placeholder="e.g. GIVEAWAY, LIVE EVENT" required />
                   </div>
                   <div>
                     <label class="nasha-label">Title</label>
@@ -183,7 +183,7 @@
                   </div>
                   <h2 style="margin:0.75rem 0 0.5rem;">Staff &amp; Founders Directory</h2>
                   <p style="color:var(--text-muted);font-size:0.84rem;margin:0 0 1rem;">
-                    Edit any staff member's display name or Discord ID, or copy their Claim Key to send them. Changes appear live on <strong>staff-info.html</strong>.
+                    Edit any staff member's display name or Discord ID, or copy their Claim Key to send them. Changes appear live on <a href="/staff-info" style="color:#7dd3fc;text-decoration:underline;">Staff Info</a>.
                   </p>
                   <div id="founderStaffProfilesList" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
                 </div>
@@ -203,7 +203,7 @@
                       <input class="nasha-input" type="number" id="inMembers" value="2720" required />
                     </div>
                     <div>
-                      <label class="nasha-label">Hero Announcement HTML</label>
+                      <label class="nasha-label">Hero Announcement Banner</label>
                       <input class="nasha-input" id="inAnnc" required />
                     </div>
                     <button type="submit" class="nasha-btn-secondary">Update Server Stats</button>
@@ -271,7 +271,7 @@
         document.getElementById("panelKicker").textContent = "🛡️ ADMIN PANEL";
         document.getElementById("panelKicker").style.color = "#38bdf8";
         document.getElementById("panelTitle").textContent = "Admin Panel — Announcements & Events";
-        document.getElementById("panelSubtitle").textContent = "Publish announcements to announcement.html and manage giveaways/events.";
+        document.getElementById("panelSubtitle").textContent = "Publish announcements to the Announcements page and manage giveaways and events.";
         toggleBtn.textContent = "👑 Switch to Founder Panel";
         adminSec.style.display = "block";
         ownerSec.style.display = "none";
@@ -320,7 +320,7 @@
         ? anncs.map(a => `
           <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;padding:0.75rem;border:1px solid rgba(56,189,248,0.2);border-radius:12px;background:rgba(3,7,18,0.55);">
             <div>
-              <strong>${a.title}</strong> <span class="channel-tag">${a.tag || "#ANNC"}</span>
+              <strong>${a.title}</strong> <span class="channel-tag">${(a.tag || "UPDATE").replace(/^#/, "")}</span>
               <div style="font-size:0.82rem;color:var(--text-muted);margin-top:0.2rem;">${a.message}</div>
             </div>
             <button type="button" class="nasha-btn-ghost-sm" onclick="removeAnnouncement('${a.id}')">Delete</button>
@@ -333,7 +333,7 @@
         ? events.map(ev => `
           <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;padding:0.75rem;border:1px solid rgba(56,189,248,0.2);border-radius:12px;background:rgba(3,7,18,0.55);">
             <div>
-              <strong>${ev.title}</strong> <span class="channel-tag">${ev.channel}</span>
+              <strong>${ev.title}</strong> <span class="channel-tag">${(ev.channel || "GIVEAWAY").replace(/^#/, "")}</span>
               <div style="font-size:0.8rem;color:#7dd3fc;">Prize: ${ev.prize} • ${ev.rsvps || 0} RSVPs</div>
             </div>
             <button type="button" class="nasha-btn-ghost-sm" onclick="removeEvent('${ev.id}')">Delete</button>
@@ -495,28 +495,28 @@
     document.getElementById("createAnnouncementForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       await window.NashaDB.addAnnouncement({
-        tag: document.getElementById("anncTag").value.trim(),
+        tag: document.getElementById("anncTag").value.trim().replace(/^#/, ""),
         title: document.getElementById("anncTitle").value.trim(),
         message: document.getElementById("anncMessage").value.trim()
       });
       e.target.reset();
-      document.getElementById("anncTag").value = "#ANNC";
+      document.getElementById("anncTag").value = "UPDATE";
       loadAdminData();
-      if (window.showToast) window.showToast("Announcement published to announcement.html!");
+      if (window.showToast) window.showToast("Announcement published!");
     });
 
     document.getElementById("createEventForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       await window.NashaDB.addEvent({
         type: document.getElementById("evType").value,
-        channel: document.getElementById("evChannel").value.trim(),
+        channel: document.getElementById("evChannel").value.trim().replace(/^#/, ""),
         title: document.getElementById("evTitle").value.trim(),
         prize: document.getElementById("evPrize").value.trim(),
         endsAt: document.getElementById("evEndsAt").value,
         description: document.getElementById("evDesc").value.trim()
       });
       e.target.reset();
-      document.getElementById("evChannel").value = "#GVWY";
+      document.getElementById("evChannel").value = "GIVEAWAY";
       loadAdminData();
       if (window.showToast) window.showToast("Published event / giveaway!");
     });
